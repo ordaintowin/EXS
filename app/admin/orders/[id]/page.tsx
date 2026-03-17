@@ -216,17 +216,26 @@ export default function AdminOrderDetailPage() {
             {isFinal ? (
               <p className="text-sm text-gray-500">Order is {order.status}. No further actions available.</p>
             ) : order.status === 'waiting' ? (
-              <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3">
-                <p className="text-sm text-orange-700 font-medium">
-                  {order.orderType === 'buy'
-                    ? '⏳ Waiting for user to confirm GHS payment'
-                    : '⏳ Waiting for user to confirm crypto sent'}
-                </p>
-                <p className="text-xs text-orange-600 mt-1">
-                  {order.orderType === 'buy'
-                    ? 'Action buttons will activate once user clicks "I Have Paid"'
-                    : 'Action buttons will activate once user clicks "I Have Sent Crypto"'}
-                </p>
+              <div className="flex flex-col gap-2">
+                <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 mb-1">
+                  <p className="text-sm text-orange-700 font-medium">
+                    {order.orderType === 'buy'
+                      ? '⏳ Waiting for user to confirm GHS payment'
+                      : '⏳ Waiting for user to confirm crypto sent'}
+                  </p>
+                  <p className="text-xs text-orange-600 mt-1">
+                    {order.orderType === 'buy'
+                      ? 'Action buttons will activate once user clicks "I Have Paid"'
+                      : 'Action buttons will activate once user clicks "I Have Sent Crypto"'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleStatusChange('cancelled')}
+                  disabled={updatingStatus}
+                  className="w-full bg-gray-600 hover:bg-gray-700 disabled:bg-gray-300 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
+                >
+                  {updatingStatus ? 'Updating…' : '🚫 Cancel Order'}
+                </button>
               </div>
             ) : order.status === 'pending' ? (
               <div className="flex flex-col gap-2">
@@ -249,6 +258,13 @@ export default function AdminOrderDetailPage() {
                 >
                   {updatingStatus ? 'Updating…' : '❌ Mark Failed'}
                 </button>
+                <button
+                  onClick={() => handleStatusChange('cancelled')}
+                  disabled={updatingStatus}
+                  className="w-full bg-gray-600 hover:bg-gray-700 disabled:bg-gray-300 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
+                >
+                  {updatingStatus ? 'Updating…' : '🚫 Cancel Order'}
+                </button>
               </div>
             ) : (
               <div className="flex flex-col gap-2">
@@ -265,6 +281,13 @@ export default function AdminOrderDetailPage() {
                   className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
                 >
                   {updatingStatus ? 'Updating…' : '❌ Mark Failed'}
+                </button>
+                <button
+                  onClick={() => handleStatusChange('cancelled')}
+                  disabled={updatingStatus}
+                  className="w-full bg-gray-600 hover:bg-gray-700 disabled:bg-gray-300 text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
+                >
+                  {updatingStatus ? 'Updating…' : '🚫 Cancel Order'}
                 </button>
               </div>
             )}
