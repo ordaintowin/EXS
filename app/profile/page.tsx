@@ -451,6 +451,13 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
+                  <a
+                    href="/profile/referrals"
+                    className="text-sm text-green-700 hover:text-green-900 font-medium inline-flex items-center gap-1"
+                  >
+                    View All Invited People →
+                  </a>
+
                 </>
               )}
             </div>
