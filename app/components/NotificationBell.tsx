@@ -107,6 +107,21 @@ export default function NotificationBell() {
   const unreadCount = notifications.filter((n) => !n.isRead).length;
   const recent = notifications.slice(0, NOTIFICATION_DISPLAY_LIMIT);
 
+  async function markAllRead() {
+    const token = getToken();
+    if (!token) return;
+    try {
+      const res = await fetch('/api/notifications/mark-all-read', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    } catch {
+      // silently fail
+    }
+  }
+
   async function markRead(id: string) {
     const token = getToken();
     if (!token) return;
@@ -158,14 +173,24 @@ export default function NotificationBell() {
                 <span className="ml-2 text-xs text-lime-400">{unreadCount} unread</span>
               )}
             </div>
-            <button
-              onClick={toggleSound}
-              title={soundEnabled ? 'Mute notification sounds' : 'Unmute notification sounds'}
-              className="text-white hover:text-lime-400 transition-colors"
-              aria-label={soundEnabled ? 'Mute sounds' : 'Unmute sounds'}
-            >
-              {soundEnabled ? <Bell size={16} /> : <BellOff size={16} />}
-            </button>
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllRead}
+                  className="text-xs text-lime-400 hover:text-lime-200 font-medium transition-colors"
+                >
+                  Mark all as read
+                </button>
+              )}
+              <button
+                onClick={toggleSound}
+                title={soundEnabled ? 'Mute notification sounds' : 'Unmute notification sounds'}
+                className="text-white hover:text-lime-400 transition-colors"
+                aria-label={soundEnabled ? 'Mute sounds' : 'Unmute sounds'}
+              >
+                {soundEnabled ? <Bell size={16} /> : <BellOff size={16} />}
+              </button>
+            </div>
           </div>
           <div className="max-h-96 overflow-y-auto">
             {recent.length === 0 ? (
