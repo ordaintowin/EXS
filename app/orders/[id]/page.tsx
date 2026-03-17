@@ -126,6 +126,7 @@ export default function OrderDetailPage() {
   const [walletAddress, setWalletAddress] = useState('');
   const [copied, setCopied] = useState(false);
   const [sending, setSending] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [timerExpired, setTimerExpired] = useState(false);
 
   const token = getToken();
@@ -209,6 +210,28 @@ export default function OrderDetailPage() {
       // ignore
     } finally {
       setSending(false);
+    }
+  }
+
+  async function handleCancel() {
+    if (!order || !token) return;
+    if (!confirm('Are you sure you want to cancel this order?')) return;
+    setCancelling(true);
+    try {
+      const res = await fetch(`/api/orders/${order.id}/cancel`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Failed to cancel order.');
+        return;
+      }
+      await reloadOrder();
+    } catch {
+      alert('Failed to cancel order. Please try again.');
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -304,10 +327,17 @@ export default function OrderDetailPage() {
                 </div>
                 <button
                   onClick={handleSentPayment}
-                  disabled={sending}
+                  disabled={sending || cancelling}
                   className="w-full bg-green-700 hover:bg-green-800 disabled:bg-green-400 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
                 >
                   {sending ? 'Processing…' : "I Have Sent Crypto →"}
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelling || sending}
+                  className="w-full mt-2 border border-red-400 text-red-600 hover:bg-red-50 disabled:opacity-50 font-semibold py-2.5 rounded-xl transition-colors text-sm"
+                >
+                  {cancelling ? 'Cancelling…' : '✕ Cancel Order'}
                 </button>
               </>
             )}
@@ -345,10 +375,17 @@ export default function OrderDetailPage() {
                 </div>
                 <button
                   onClick={handleSentPayment}
-                  disabled={sending}
+                  disabled={sending || cancelling}
                   className="w-full bg-green-700 hover:bg-green-800 disabled:bg-green-400 text-white font-semibold py-3 rounded-xl transition-colors text-sm mt-3"
                 >
                   {sending ? 'Processing…' : "I Have Sent Crypto →"}
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelling || sending}
+                  className="w-full mt-2 border border-red-400 text-red-600 hover:bg-red-50 disabled:opacity-50 font-semibold py-2.5 rounded-xl transition-colors text-sm"
+                >
+                  {cancelling ? 'Cancelling…' : '✕ Cancel Order'}
                 </button>
               </>
             )}
@@ -392,10 +429,17 @@ export default function OrderDetailPage() {
                 )}
                 <button
                   onClick={handleSentPayment}
-                  disabled={sending}
+                  disabled={sending || cancelling}
                   className="w-full bg-green-700 hover:bg-green-800 disabled:bg-green-400 text-white font-bold py-4 rounded-xl transition-colors text-base shadow-md"
                 >
                   {sending ? 'Processing…' : '✅ I Have Paid'}
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelling || sending}
+                  className="w-full mt-2 border border-red-400 text-red-600 hover:bg-red-50 disabled:opacity-50 font-semibold py-2.5 rounded-xl transition-colors text-sm"
+                >
+                  {cancelling ? 'Cancelling…' : '✕ Cancel Order'}
                 </button>
               </>
             )}

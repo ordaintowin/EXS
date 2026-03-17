@@ -1,4 +1,4 @@
-// POST /api/orders/[id]/cancel — cancel an order that is still waiting or pending
+// POST /api/orders/[id]/cancel — cancel an order that is still waiting (before user confirms payment)
 import { NextRequest, NextResponse } from 'next/server';
 import { getTokenFromRequest, verifyToken } from '@/app/api/lib/jwt';
 import { prisma } from '@/app/api/lib/prisma';
@@ -27,9 +27,9 @@ export async function POST(
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    if (order.status !== 'waiting' && order.status !== 'pending') {
+    if (order.status !== 'waiting') {
       return NextResponse.json(
-        { error: 'Only waiting or pending orders can be cancelled' },
+        { error: 'You can only cancel an order before confirming payment. Once you have confirmed, contact support.' },
         { status: 400 }
       );
     }
