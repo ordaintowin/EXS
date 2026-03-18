@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
             recipientType: recipientType,
             isRead: false,
         },
+        data: { isRead: true },
     });
 
     return NextResponse.json({ success: true, count: updated.count });
