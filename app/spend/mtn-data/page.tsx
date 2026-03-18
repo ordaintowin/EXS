@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CRYPTO_OPTIONS, getCryptoLabel, DEFAULT_LIVE_RATES, LiveRates } from '@/app/lib/crypto';
+import { CRYPTO_OPTIONS, getCryptoLabel, getLiveCryptoPriceText, DEFAULT_LIVE_RATES, LiveRates } from '@/app/lib/crypto';
 import { createOrder } from '@/app/lib/orders-api';
 import { getToken } from '@/app/lib/auth';
 import DailyQuotaDisplay from '@/app/components/DailyQuotaDisplay';
@@ -70,6 +70,7 @@ export default function MtnDataPage() {
 
   const selectedBundle = selectedBundleIndex !== null ? bundles[selectedBundleIndex] : null;
   const cryptoAmount = crypto && selectedBundle ? calcBundleCrypto(selectedBundle.priceGhs, crypto, rates) : '—';
+  const livePriceText = getLiveCryptoPriceText(crypto, rates);
 
   function handlePhoneChange(val: string) {
     setPhone(val);
@@ -150,7 +151,7 @@ export default function MtnDataPage() {
       <p className="text-gray-500 mb-2 text-sm">Buy data bundles for any MTN number with crypto</p>
       {!loadingRates && (
         <p className="text-xs text-gray-400 mb-6">
-          Rate: 1 USD = {rates.ghsPerUsd} GHS (admin rate) | 1 BTC = ${rates.btcUsd.toLocaleString()} (live)
+          Rate: 1 USD = {rates.ghsPerUsd} GHS (admin rate){livePriceText && ` | ${livePriceText}`}
         </p>
       )}
 

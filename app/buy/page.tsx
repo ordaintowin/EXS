@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import BanModal from '@/app/components/BanModal';
+import { getLiveCryptoPriceText } from '@/app/lib/crypto';
 
 const ASSETS = ['BTC', 'BNB', 'ETH', 'USDT (TRC-20)', 'USDT (BEP-20)', 'USDC (BEP-20)'];
 
@@ -356,7 +357,10 @@ export default function BuyPage() {
 
   const rateInfo = loadingRates
     ? 'Loading rates\u2026'
-    : `Rate: 1 USD = ${ghsPerUsd} GHS (admin rate) | 1 BTC = $${btcUsd.toLocaleString()} (live)`;
+    : (() => {
+        const lp = getLiveCryptoPriceText(asset, { btcUsd, bnbUsd, ethUsd });
+        return `Rate: 1 USD = ${ghsPerUsd} GHS (admin rate)${lp ? ` | ${lp}` : ''}`;
+      })();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-700 flex flex-col items-center px-4 py-10">

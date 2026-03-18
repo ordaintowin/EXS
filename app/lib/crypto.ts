@@ -101,6 +101,22 @@ export function calcGhsFromCrypto(
   return cryptoAmount * r.ghsPerUsd;
 }
 
+/**
+ * Returns a short live-price label for the selected crypto asset, e.g.
+ *   "1 BTC = $74,147 (live)"  |  "1 BNB = $580 (live)"  |  "1 USDT ≈ $1.00 (stable)"
+ * Returns null for Binance Pay / Bybit Pay or any unrecognised asset.
+ * Works with both spend-page keys ('USDT_TRC20') and buy/sell display names ('USDT (TRC-20)').
+ */
+export function getLiveCryptoPriceText(asset: string, rates: Partial<LiveRates>): string | null {
+  const r = { ...DEFAULT_LIVE_RATES, ...rates };
+  if (asset === 'BTC') return `1 BTC = $${r.btcUsd.toLocaleString()} (live)`;
+  if (asset === 'BNB') return `1 BNB = $${r.bnbUsd.toLocaleString()} (live)`;
+  if (asset === 'ETH') return `1 ETH = $${r.ethUsd.toLocaleString()} (live)`;
+  if (asset.startsWith('USDT')) return '1 USDT ≈ $1.00 (stable)';
+  if (asset.startsWith('USDC')) return '1 USDC ≈ $1.00 (stable)';
+  return null;
+}
+
 export function getCryptoLabel(value: string): string {
   return CRYPTO_OPTIONS.find((c) => c.value === value)?.label ?? value;
 }

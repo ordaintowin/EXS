@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CRYPTO_OPTIONS, calcCrypto, getCryptoLabel, DEFAULT_LIVE_RATES, LiveRates } from '@/app/lib/crypto';
+import { CRYPTO_OPTIONS, calcCrypto, getCryptoLabel, getLiveCryptoPriceText, DEFAULT_LIVE_RATES, LiveRates } from '@/app/lib/crypto';
 import { createOrder } from '@/app/lib/orders-api';
 import { getToken } from '@/app/lib/auth';
 import DailyQuotaDisplay from '@/app/components/DailyQuotaDisplay';
@@ -67,6 +67,7 @@ export default function BankPage() {
 
   const amountNum = parseFloat(amount);
   const cryptoAmount = crypto && amount ? calcCrypto(amountNum, crypto, rates) : '—';
+  const livePriceText = getLiveCryptoPriceText(crypto, rates);
 
   function handleAmountChange(val: string) {
     setAmount(val);
@@ -143,7 +144,7 @@ export default function BankPage() {
       <h1 className="text-green-900 text-2xl md:text-3xl font-bold mb-1">Bank Transfer</h1>
       <p className="text-gray-500 mb-2 text-sm">Send crypto, receive GHS in any bank account</p>
       <p className="text-xs text-gray-400 mb-6">
-        Rate: 1 USD = {rates.ghsPerUsd} GHS (admin rate) | 1 BTC = ${rates.btcUsd.toLocaleString()} (live)
+        Rate: 1 USD = {rates.ghsPerUsd} GHS (admin rate){livePriceText && ` | ${livePriceText}`}
       </p>
 
       {/* Warning box */}

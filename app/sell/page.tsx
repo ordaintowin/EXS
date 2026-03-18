@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getToken } from '@/app/lib/auth';
+import { getLiveCryptoPriceText } from '@/app/lib/crypto';
 import BanModal from '@/app/components/BanModal';
 
 const ASSETS = ['BTC', 'BNB', 'ETH', 'USDT (TRC-20)', 'USDT (BEP-20)', 'USDC (BEP-20)', 'Binance Pay', 'Bybit Pay'];
@@ -130,7 +131,10 @@ export default function SellPage() {
 
   const rateInfo = loadingRates
     ? 'Loading rates…'
-    : `Rate: 1 USD = ${ghsPerUsd} GHS (admin rate) | 1 BTC = $${btcUsd.toLocaleString()} (live)`;
+    : (() => {
+        const lp = getLiveCryptoPriceText(asset, { btcUsd, bnbUsd, ethUsd });
+        return `Rate: 1 USD = ${ghsPerUsd} GHS (admin rate)${lp ? ` | ${lp}` : ''}`;
+      })();
 
   function handleStep1Continue() {
     const minGhs = 150;
