@@ -59,7 +59,7 @@ export default function MtnDataPage() {
       fetch('/api/bundles?network=MTN').then(r => r.json()).catch(() => null),
     ]).then(([settingsData, pricesData, bundlesData]) => {
       setRates({
-        ghsPerUsd: settingsData?.settings?.ghsPerUsd ?? DEFAULT_LIVE_RATES.ghsPerUsd,
+        ghsPerUsd: settingsData?.settings?.sellRateGhsPerUsd ?? settingsData?.settings?.ghsPerUsd ?? DEFAULT_LIVE_RATES.ghsPerUsd,
         btcUsd: pricesData?.btcUsd ?? DEFAULT_LIVE_RATES.btcUsd,
         bnbUsd: pricesData?.bnbUsd ?? DEFAULT_LIVE_RATES.bnbUsd,
         ethUsd: pricesData?.ethUsd ?? DEFAULT_LIVE_RATES.ethUsd,

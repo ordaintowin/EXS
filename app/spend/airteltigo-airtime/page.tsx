@@ -28,7 +28,7 @@ export default function AirtelTigoAirtimePage() {
       fetch('/api/crypto-prices').then(r => r.json()).catch(() => null),
     ]).then(([settingsData, pricesData]) => {
       setRates({
-        ghsPerUsd: settingsData?.settings?.ghsPerUsd ?? DEFAULT_LIVE_RATES.ghsPerUsd,
+        ghsPerUsd: settingsData?.settings?.sellRateGhsPerUsd ?? settingsData?.settings?.ghsPerUsd ?? DEFAULT_LIVE_RATES.ghsPerUsd,
         btcUsd: pricesData?.btcUsd ?? DEFAULT_LIVE_RATES.btcUsd,
         bnbUsd: pricesData?.bnbUsd ?? DEFAULT_LIVE_RATES.bnbUsd,
         ethUsd: pricesData?.ethUsd ?? DEFAULT_LIVE_RATES.ethUsd,
