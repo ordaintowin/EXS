@@ -67,7 +67,7 @@ export async function registerUser(name: string, email: string, phone: string, p
 }
 
 // Call the API to login
-export async function loginUser(email: string, password: string): Promise<{ success: boolean; error?: string }> {
+export async function loginUser(email: string, password: string): Promise<{ success: boolean; error?: string; banned?: boolean }> {
   try {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
@@ -76,6 +76,9 @@ export async function loginUser(email: string, password: string): Promise<{ succ
     });
     const data = await res.json();
     if (!res.ok) {
+      if (data.error === 'banned') {
+        return { success: false, banned: true };
+      }
       return { success: false, error: data.error || 'Login failed' };
     }
     setCurrentUser(data.user, data.token);
