@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CRYPTO_OPTIONS, getCryptoLabel, DEFAULT_LIVE_RATES, LiveRates } from '@/app/lib/crypto';
+import { CRYPTO_OPTIONS, getCryptoLabel, getLiveCryptoPriceText, DEFAULT_LIVE_RATES, LiveRates } from '@/app/lib/crypto';
 import { createOrder } from '@/app/lib/orders-api';
 import { getToken } from '@/app/lib/auth';
 import DailyQuotaDisplay from '@/app/components/DailyQuotaDisplay';
+import BanModal from '@/app/components/BanModal';
 
 const AIRTELTIGO_PREFIXES = ['026', '056', '027', '057'];
 
@@ -45,7 +46,7 @@ export default function AirtelTigoDataPage() {
       fetch('/api/bundles?network=AirtelTigo').then(r => r.json()).catch(() => null),
     ]).then(([settingsData, pricesData, bundlesData]) => {
       setRates({
-        ghsPerUsd: settingsData?.settings?.ghsPerUsd ?? DEFAULT_LIVE_RATES.ghsPerUsd,
+        ghsPerUsd: settingsData?.settings?.sellRateGhsPerUsd ?? settingsData?.settings?.ghsPerUsd ?? DEFAULT_LIVE_RATES.ghsPerUsd,
         btcUsd: pricesData?.btcUsd ?? DEFAULT_LIVE_RATES.btcUsd,
         bnbUsd: pricesData?.bnbUsd ?? DEFAULT_LIVE_RATES.bnbUsd,
         ethUsd: pricesData?.ethUsd ?? DEFAULT_LIVE_RATES.ethUsd,
@@ -62,11 +63,13 @@ export default function AirtelTigoDataPage() {
   const [phoneError, setPhoneError] = useState('');
   const [formError, setFormError] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showBanModal, setShowBanModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState('');
 
   const selectedBundle = selectedBundleIndex !== null ? bundles[selectedBundleIndex] : null;
   const cryptoAmount = crypto && selectedBundle ? calcBundleCrypto(selectedBundle.priceGhs, crypto, rates) : '—';
+  const livePriceText = getLiveCryptoPriceText(crypto, rates);
 
   function handlePhoneChange(val: string) {
     setPhone(val);
@@ -109,7 +112,7 @@ export default function AirtelTigoDataPage() {
       cryptoAmount,
       bundleLabel: selectedBundle?.label,
       cryptoRateGhs: rates.ghsPerUsd,
-    });
+    }, { onBanned: () => { setShowBanModal(true); setShowModal(false); } });
     setSubmitting(false);
     if (order) {
       setOrderId(order.id);
@@ -121,7 +124,7 @@ export default function AirtelTigoDataPage() {
 
   if (orderId) {
     return (
-      <div className="bg-green-50 rounded-2xl p-10 text-center">
+    <div className="bg-green-50 rounded-2xl p-10 text-center">
         <p className="text-4xl mb-4">✅</p>
         <h1 className="text-green-900 font-bold text-2xl mb-2">Order Submitted!</h1>
         <p className="text-green-700 mb-4">Your order has been received.</p>
@@ -133,7 +136,9 @@ export default function AirtelTigoDataPage() {
   }
 
   return (
-    <div className="bg-red-50 rounded-2xl p-6 md:p-10 shadow-sm max-w-2xl mx-auto">
+    <>
+      <BanModal open={showBanModal} onClose={() => setShowBanModal(false)} />
+      <div className="bg-red-50 rounded-2xl p-6 md:p-10 shadow-sm max-w-2xl mx-auto">
       <Link
         href="/spend"
         className="inline-flex items-center gap-1 text-red-900 hover:text-red-950 mb-6 text-sm font-medium"
@@ -147,7 +152,7 @@ export default function AirtelTigoDataPage() {
       </div>
       <p className="text-gray-500 mb-2 text-sm">Buy data bundles for any AirtelTigo number with crypto</p>
       <p className="text-xs text-gray-400 mb-6">
-        Rate: 1 USD = {rates.ghsPerUsd} GHS (admin rate) | 1 BTC = ${rates.btcUsd.toLocaleString()} (live)
+        Rate: 1 USD = {rates.ghsPerUsd} GHS (admin rate){livePriceText && ` | ${livePriceText}`}
       </p>
 
       <div className="bg-white rounded-2xl shadow p-6 flex flex-col gap-5">
@@ -304,5 +309,6 @@ export default function AirtelTigoDataPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

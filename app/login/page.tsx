@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [banned, setBanned] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -27,11 +28,14 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    setBanned(false);
     setLoading(true);
     const result = await loginUser(email, password);
     setLoading(false);
     if (result.success) {
       router.replace('/spend');
+    } else if (result.banned) {
+      setBanned(true);
     } else {
       setError(result.error ?? 'Login failed.');
     }
@@ -77,6 +81,23 @@ export default function LoginPage() {
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
+
+          {banned && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+              <p className="text-sm font-semibold text-red-700 mb-1">🚫 Account Restricted</p>
+              <p className="text-xs text-red-600 mb-3">
+                Your account has been restricted. Please contact support for assistance.
+              </p>
+              <a
+                href="https://wa.me/233571827900"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-green-600 hover:bg-green-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+              >
+                💬 Contact Support on WhatsApp
+              </a>
+            </div>
+          )}
 
           <div className="text-right">
             <Link href="/forgot-password" className="text-sm text-green-700 hover:text-green-900 underline">

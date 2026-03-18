@@ -9,6 +9,7 @@ type AdminUser = {
   email: string;
   phone: string;
   createdAt: string;
+  isBanned: boolean;
   kycStatus: 'not_submitted' | 'pending' | 'approved' | 'rejected';
 };
 
@@ -30,6 +31,7 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [banningId, setBanningId] = useState<string | null>(null);
   const PAGE_SIZE = 10;
 
   useEffect(() => {
@@ -49,6 +51,34 @@ export default function AdminUsersPage() {
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  async function handleToggleBan(user: AdminUser) {
+    const action = user.isBanned ? 'unban' : 'ban';
+    if (!confirm(`Are you sure you want to ${action} ${user.name}?`)) return;
+    const token = getToken();
+    if (!token) return;
+    setBanningId(user.id);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/ban`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ banned: !user.isBanned }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(prev =>
+          prev.map(u => u.id === user.id ? { ...u, isBanned: data.user.isBanned } : u)
+        );
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || `Failed to ${action} user.`);
+      }
+    } catch {
+      alert(`Failed to ${action} user. Please try again.`);
+    } finally {
+      setBanningId(null);
+    }
+  }
 
   return (
     <div className="p-6">
@@ -77,16 +107,18 @@ export default function AdminUsersPage() {
                 <th className="px-4 py-3 text-left">Phone</th>
                 <th className="px-4 py-3 text-left">Joined</th>
                 <th className="px-4 py-3 text-left">KYC</th>
+                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">No users found</td>
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400">No users found</td>
                 </tr>
               ) : (
                 paged.map(user => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.id} className={`hover:bg-gray-50 ${user.isBanned ? 'bg-red-50' : ''}`}>
                     <td className="px-4 py-3 text-gray-800 font-medium">{user.name}</td>
                     <td className="px-4 py-3 text-gray-600">{user.email}</td>
                     <td className="px-4 py-3 text-gray-600">{user.phone}</td>
@@ -97,6 +129,30 @@ export default function AdminUsersPage() {
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${KYC_BADGE[user.kycStatus]}`}>
                         {KYC_LABEL[user.kycStatus]}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {user.isBanned ? (
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+                          Banned
+                        </span>
+                      ) : (
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                          Active
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => handleToggleBan(user)}
+                        disabled={banningId === user.id}
+                        className={`text-xs font-semibold px-3 py-1 rounded-lg transition-colors disabled:opacity-50 ${
+                          user.isBanned
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                            : 'bg-red-100 text-red-700 hover:bg-red-200'
+                        }`}
+                      >
+                        {banningId === user.id ? '…' : user.isBanned ? 'Unban' : 'Ban'}
+                      </button>
                     </td>
                   </tr>
                 ))

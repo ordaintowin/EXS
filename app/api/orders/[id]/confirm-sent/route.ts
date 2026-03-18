@@ -27,6 +27,12 @@ export async function POST(
       return NextResponse.json({ error: 'Order is not in waiting state' }, { status: 400 });
     }
 
+    // Check if user is banned
+    const userRecord = await prisma.user.findUnique({ where: { id: user.userId }, select: { isBanned: true } });
+    if (userRecord?.isBanned) {
+      return NextResponse.json({ error: 'banned', message: 'Your account has been restricted. Please contact support.' }, { status: 403 });
+    }
+
     const updated = await prisma.order.update({
       where: { id },
       data: { status: 'pending' },

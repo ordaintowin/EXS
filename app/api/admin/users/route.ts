@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
       email: u.email,
       phone: u.phone,
       isAdmin: u.isAdmin,
+      isBanned: u.isBanned,
       isVerified: u.isVerified,
       createdAt: u.createdAt,
       kycStatus: u.kyc[0]?.status ?? 'not_submitted',

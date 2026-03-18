@@ -69,7 +69,10 @@ export async function fetchOrders(): Promise<ApiOrder[] | null> {
   }
 }
 
-export async function createOrder(orderData: CreateOrderInput): Promise<ApiOrder | null> {
+export async function createOrder(
+  orderData: CreateOrderInput,
+  options?: { onBanned?: () => void }
+): Promise<ApiOrder | null> {
   const token = getToken();
   if (!token) return null;
 
@@ -90,7 +93,13 @@ export async function createOrder(orderData: CreateOrderInput): Promise<ApiOrder
       },
       body: JSON.stringify(body),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (data.error === 'banned') {
+        options?.onBanned?.();
+      }
+      return null;
+    }
     const data = await res.json();
     return data.order || null;
   } catch {

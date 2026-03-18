@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CRYPTO_OPTIONS, calcCrypto, getCryptoLabel, DEFAULT_LIVE_RATES, LiveRates } from '@/app/lib/crypto';
+import { CRYPTO_OPTIONS, calcCrypto, getCryptoLabel, getLiveCryptoPriceText, DEFAULT_LIVE_RATES, LiveRates } from '@/app/lib/crypto';
 import { createOrder } from '@/app/lib/orders-api';
 import { getToken } from '@/app/lib/auth';
 import DailyQuotaDisplay from '@/app/components/DailyQuotaDisplay';
+import BanModal from '@/app/components/BanModal';
 
 const AIRTELTIGO_PREFIXES = ['026', '056', '027', '057'];
 
@@ -39,11 +40,13 @@ export default function AirtelTigoMomoPage() {
   const [amountError, setAmountError] = useState('');
   const [formError, setFormError] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showBanModal, setShowBanModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState('');
 
   const amountNum = parseFloat(amount);
   const cryptoAmount = crypto && amount ? calcCrypto(amountNum, crypto, rates) : '—';
+  const livePriceText = getLiveCryptoPriceText(crypto, rates);
 
   function handlePhoneChange(val: string) {
     setPhone(val);
@@ -100,7 +103,7 @@ export default function AirtelTigoMomoPage() {
       cryptoAmount,
       reference: reference || undefined,
       cryptoRateGhs: rates.ghsPerUsd,
-    });
+    }, { onBanned: () => { setShowBanModal(true); setShowModal(false); } });
     setSubmitting(false);
     if (order) {
       setOrderId(order.id);
@@ -112,7 +115,7 @@ export default function AirtelTigoMomoPage() {
 
   if (orderId) {
     return (
-      <div className="bg-green-50 rounded-2xl p-10 text-center">
+    <div className="bg-green-50 rounded-2xl p-10 text-center">
         <p className="text-4xl mb-4">✅</p>
         <h1 className="text-green-900 font-bold text-2xl mb-2">Order Submitted!</h1>
         <p className="text-green-700 mb-4">Your order has been received.</p>
@@ -124,7 +127,9 @@ export default function AirtelTigoMomoPage() {
   }
 
   return (
-    <div className="bg-red-50 rounded-2xl p-6 md:p-10 shadow-sm max-w-2xl mx-auto">
+    <>
+      <BanModal open={showBanModal} onClose={() => setShowBanModal(false)} />
+      <div className="bg-red-50 rounded-2xl p-6 md:p-10 shadow-sm max-w-2xl mx-auto">
       <Link
         href="/spend"
         className="inline-flex items-center gap-1 text-red-900 hover:text-red-950 mb-6 text-sm font-medium"
@@ -138,7 +143,7 @@ export default function AirtelTigoMomoPage() {
       </div>
       <p className="text-gray-500 mb-2 text-sm">Send crypto, pay to any AirtelTigo MoMo number</p>
       <p className="text-xs text-gray-400 mb-6">
-        Rate: 1 USD = {rates.ghsPerUsd} GHS (admin rate) | 1 BTC = ${rates.btcUsd.toLocaleString()} (live)
+        Rate: 1 USD = {rates.ghsPerUsd} GHS (admin rate){livePriceText && ` | ${livePriceText}`}
       </p>
 
       {/* Warning box */}
@@ -301,5 +306,6 @@ export default function AirtelTigoMomoPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

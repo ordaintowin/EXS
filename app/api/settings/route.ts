@@ -95,6 +95,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // When sell rate is updated, also record it in ExchangeRate for dashboard display
+    if (sellRateGhsPerUsd !== undefined) {
+      await prisma.exchangeRate.create({
+        data: {
+          ghsPerUsd: parseFloat(sellRateGhsPerUsd),
+          setByAdmin: user.email,
+          note: 'Set via admin rates page',
+        },
+      });
+    }
+
     const latestRate = await prisma.exchangeRate.findFirst({ orderBy: { createdAt: 'desc' } });
 
     return NextResponse.json({

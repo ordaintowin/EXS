@@ -7,6 +7,7 @@ import { DEFAULT_LIVE_RATES, LiveRates } from '@/app/lib/crypto';
 import { createOrder } from '@/app/lib/orders-api';
 import { getToken } from '@/app/lib/auth';
 import DailyQuotaDisplay from '@/app/components/DailyQuotaDisplay';
+import BanModal from '@/app/components/BanModal';
 
 const AIRTIME_CRYPTO_OPTIONS = [
   { label: 'Binance Pay', value: 'BINANCE_PAY' },
@@ -27,7 +28,7 @@ export default function TelecelAirtimePage() {
       fetch('/api/crypto-prices').then(r => r.json()).catch(() => null),
     ]).then(([settingsData, pricesData]) => {
       setRates({
-        ghsPerUsd: settingsData?.settings?.ghsPerUsd ?? DEFAULT_LIVE_RATES.ghsPerUsd,
+        ghsPerUsd: settingsData?.settings?.sellRateGhsPerUsd ?? settingsData?.settings?.ghsPerUsd ?? DEFAULT_LIVE_RATES.ghsPerUsd,
         btcUsd: pricesData?.btcUsd ?? DEFAULT_LIVE_RATES.btcUsd,
         bnbUsd: pricesData?.bnbUsd ?? DEFAULT_LIVE_RATES.bnbUsd,
         ethUsd: pricesData?.ethUsd ?? DEFAULT_LIVE_RATES.ethUsd,
@@ -44,6 +45,7 @@ export default function TelecelAirtimePage() {
   const [amountError, setAmountError] = useState('');
   const [formError, setFormError] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showBanModal, setShowBanModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState('');
 
@@ -109,7 +111,7 @@ export default function TelecelAirtimePage() {
       cryptoAsset: crypto,
       cryptoAmount: cryptoAmount ?? '—',
       cryptoRateGhs: rates.ghsPerUsd,
-    });
+    }, { onBanned: () => { setShowBanModal(true); setShowModal(false); } });
     setSubmitting(false);
     if (order) {
       setOrderId(order.id);
@@ -121,7 +123,7 @@ export default function TelecelAirtimePage() {
 
   if (orderId) {
     return (
-      <div className="bg-green-50 rounded-2xl p-10 text-center">
+    <div className="bg-green-50 rounded-2xl p-10 text-center">
         <p className="text-4xl mb-4">✅</p>
         <h1 className="text-green-900 font-bold text-2xl mb-2">Order Submitted!</h1>
         <p className="text-green-700 mb-4">Your order has been received.</p>
@@ -133,7 +135,9 @@ export default function TelecelAirtimePage() {
   }
 
   return (
-    <div className="bg-red-50 rounded-2xl p-6 md:p-10 shadow-sm max-w-2xl mx-auto">
+    <>
+      <BanModal open={showBanModal} onClose={() => setShowBanModal(false)} />
+      <div className="bg-red-50 rounded-2xl p-6 md:p-10 shadow-sm max-w-2xl mx-auto">
       <Link
         href="/spend"
         className="inline-flex items-center gap-1 text-red-800 hover:text-red-900 mb-6 text-sm font-medium"
@@ -290,5 +294,6 @@ export default function TelecelAirtimePage() {
         </div>
       )}
     </div>
+    </>
   );
 }

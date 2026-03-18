@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import BanModal from '@/app/components/BanModal';
+import { getLiveCryptoPriceText } from '@/app/lib/crypto';
 
 const ASSETS = ['BTC', 'BNB', 'ETH', 'USDT (TRC-20)', 'USDT (BEP-20)', 'USDC (BEP-20)'];
 
@@ -74,6 +76,7 @@ export default function BuyPage() {
   const [loadingRates, setLoadingRates] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showBanModal, setShowBanModal] = useState(false);
 
   // Rates
   const [ghsPerUsd, setGhsPerUsd] = useState(0);
@@ -256,7 +259,10 @@ export default function BuyPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Failed to create order'); return; }
+      if (!res.ok) {
+        if (data.error === 'banned') { setShowBanModal(true); return; }
+        setError(data.error || 'Failed to create order'); return;
+      }
       const newOrderId = data.order.id;
       setOrderId(newOrderId);
       setStep(4);
@@ -351,10 +357,14 @@ export default function BuyPage() {
 
   const rateInfo = loadingRates
     ? 'Loading rates\u2026'
-    : `Rate: 1 USD = ${ghsPerUsd} GHS (admin rate) | 1 BTC = $${btcUsd.toLocaleString()} (live)`;
+    : (() => {
+        const lp = getLiveCryptoPriceText(asset, { btcUsd, bnbUsd, ethUsd });
+        return `Rate: 1 USD = ${ghsPerUsd} GHS (admin rate)${lp ? ` | ${lp}` : ''}`;
+      })();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-700 flex flex-col items-center px-4 py-10">
+      <BanModal open={showBanModal} onClose={() => setShowBanModal(false)} />
       <div className="w-full max-w-lg">
         {/* Step indicator for steps 1-3 */}
         {step > 0 && step < 4 && (

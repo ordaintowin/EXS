@@ -66,14 +66,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Check daily quota for spend and sell orders
+    // Check if user is banned
     const ghsAmount = Number(amountGhs);
+    const userRecord = await prisma.user.findUnique({
+      where: { id: user.userId },
+      select: { kycVerified: true, isBanned: true },
+    });
+    if (userRecord?.isBanned) {
+      return NextResponse.json({ error: 'banned', message: 'Your account has been restricted. Please contact support.' }, { status: 403 });
+    }
+
+    // Check daily quota for spend and sell orders
     if (orderType === 'spend' || orderType === 'sell') {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
       // Get user's kycVerified status for quota limit
-      const userRecord = await prisma.user.findUnique({ where: { id: user.userId }, select: { kycVerified: true } });
       const dailyLimit = userRecord?.kycVerified ? 30000 : 5000;
 
       const quotaResult = await prisma.order.aggregate({
