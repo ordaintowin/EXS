@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getToken } from '@/app/lib/auth';
 import OrderChat from '@/app/components/OrderChat';
+import BanModal from '@/app/components/BanModal';
 
 type OrderType = 'spend' | 'buy' | 'sell';
 type OrderStatus = 'waiting' | 'pending' | 'processing' | 'successful' | 'failed' | 'cancelled';
@@ -129,6 +130,8 @@ export default function OrderDetailPage() {
   const [cancelling, setCancelling] = useState(false);
   const [timerExpired, setTimerExpired] = useState(false);
 
+  const [banModalOpen, setBanModalOpen] = useState(false);
+
   const token = getToken();
 
   const reloadOrder = useCallback(async () => {
@@ -198,13 +201,20 @@ export default function OrderDetailPage() {
     if (!order || !token) return;
     setSending(true);
     try {
-      await fetch(`/api/orders/${order.id}/confirm-sent`, {
+      const res = await fetch(`/api/orders/${order.id}/confirm-sent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data.error === 'banned') {
+          setBanModalOpen(true);
+          return;
+        }
+      }
       await reloadOrder();
     } catch {
       // ignore
@@ -262,6 +272,9 @@ export default function OrderDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-400 to-white py-8 px-4">
+
+      <BanModal open={banModalOpen} onClose={() => setBanModalOpen(false)} />
+
       <div className="bg-white rounded-2xl shadow-lg max-w-lg mx-auto p-6">
 
         {/* Header */}

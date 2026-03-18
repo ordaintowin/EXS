@@ -7,6 +7,7 @@ import { CRYPTO_OPTIONS, getCryptoLabel, DEFAULT_LIVE_RATES, LiveRates } from '@
 import { createOrder } from '@/app/lib/orders-api';
 import { getToken } from '@/app/lib/auth';
 import DailyQuotaDisplay from '@/app/components/DailyQuotaDisplay';
+import BanModal from '@/app/components/BanModal';
 
 const TELECEL_PREFIXES = ['020', '050'];
 
@@ -62,6 +63,7 @@ export default function TelecelDataPage() {
   const [phoneError, setPhoneError] = useState('');
   const [formError, setFormError] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showBanModal, setShowBanModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState('');
 
@@ -109,7 +111,7 @@ export default function TelecelDataPage() {
       cryptoAmount,
       bundleLabel: selectedBundle?.label,
       cryptoRateGhs: rates.ghsPerUsd,
-    });
+    }, { onBanned: () => { setShowBanModal(true); setShowModal(false); } });
     setSubmitting(false);
     if (order) {
       setOrderId(order.id);
@@ -121,7 +123,7 @@ export default function TelecelDataPage() {
 
   if (orderId) {
     return (
-      <div className="bg-green-50 rounded-2xl p-10 text-center">
+    <div className="bg-green-50 rounded-2xl p-10 text-center">
         <p className="text-4xl mb-4">✅</p>
         <h1 className="text-green-900 font-bold text-2xl mb-2">Order Submitted!</h1>
         <p className="text-green-700 mb-4">Your order has been received.</p>
@@ -133,7 +135,9 @@ export default function TelecelDataPage() {
   }
 
   return (
-    <div className="bg-red-50 rounded-2xl p-6 md:p-10 shadow-sm max-w-2xl mx-auto">
+    <>
+      <BanModal open={showBanModal} onClose={() => setShowBanModal(false)} />
+      <div className="bg-red-50 rounded-2xl p-6 md:p-10 shadow-sm max-w-2xl mx-auto">
       <Link
         href="/spend"
         className="inline-flex items-center gap-1 text-red-800 hover:text-red-900 mb-6 text-sm font-medium"
@@ -304,5 +308,6 @@ export default function TelecelDataPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

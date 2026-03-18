@@ -7,6 +7,7 @@ import { CRYPTO_OPTIONS, calcCrypto, getCryptoLabel, DEFAULT_LIVE_RATES, LiveRat
 import { createOrder } from '@/app/lib/orders-api';
 import { getToken } from '@/app/lib/auth';
 import DailyQuotaDisplay from '@/app/components/DailyQuotaDisplay';
+import BanModal from '@/app/components/BanModal';
 
 const MAX_ACCOUNT_NUMBER_LENGTH = 16;
 
@@ -60,6 +61,7 @@ export default function BankPage() {
   const [amountError, setAmountError] = useState('');
   const [formError, setFormError] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showBanModal, setShowBanModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState('');
 
@@ -104,7 +106,7 @@ export default function BankPage() {
       reference: reference || undefined,
       bankName: bank || undefined,
       cryptoRateGhs: rates.ghsPerUsd,
-    });
+    }, { onBanned: () => { setShowBanModal(true); setShowModal(false); } });
     setSubmitting(false);
     if (order) {
       setOrderId(order.id);
@@ -116,7 +118,7 @@ export default function BankPage() {
 
   if (orderId) {
     return (
-      <div className="bg-green-50 rounded-2xl p-10 text-center">
+    <div className="bg-green-50 rounded-2xl p-10 text-center">
         <p className="text-4xl mb-4">✅</p>
         <h1 className="text-green-900 font-bold text-2xl mb-2">Order Submitted!</h1>
         <p className="text-green-700 mb-4">Your order has been received.</p>
@@ -128,7 +130,9 @@ export default function BankPage() {
   }
 
   return (
-    <div className="bg-green-50 rounded-2xl p-6 md:p-10 shadow-sm max-w-2xl mx-auto">
+    <>
+      <BanModal open={showBanModal} onClose={() => setShowBanModal(false)} />
+      <div className="bg-green-50 rounded-2xl p-6 md:p-10 shadow-sm max-w-2xl mx-auto">
       <Link
         href="/spend"
         className="inline-flex items-center gap-1 text-green-700 hover:text-green-900 mb-6 text-sm font-medium"
@@ -317,5 +321,6 @@ export default function BankPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

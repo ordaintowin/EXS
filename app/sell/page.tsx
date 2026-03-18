@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getToken } from '@/app/lib/auth';
+import BanModal from '@/app/components/BanModal';
 
 const ASSETS = ['BTC', 'BNB', 'ETH', 'USDT (TRC-20)', 'USDT (BEP-20)', 'USDC (BEP-20)', 'Binance Pay', 'Bybit Pay'];
 
@@ -57,6 +58,7 @@ export default function SellPage() {
   const [loadingRates, setLoadingRates] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showBanModal, setShowBanModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
   // Rates & settings
@@ -187,7 +189,10 @@ export default function SellPage() {
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || 'Failed to create order'); return; }
+      if (!res.ok) {
+        if (data.error === 'banned') { setShowBanModal(true); return; }
+        setError(data.error || 'Failed to create order'); return;
+      }
       setOrderId(data.order.id);
       setStep(4);
     } catch {
@@ -221,6 +226,7 @@ export default function SellPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 via-green-800 to-green-700 flex flex-col items-center px-4 py-10">
+      <BanModal open={showBanModal} onClose={() => setShowBanModal(false)} />
       <div className="w-full max-w-lg">
         {/* Step indicator */}
         {step < 4 && (
