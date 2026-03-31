@@ -35,8 +35,10 @@ export default function OrderChat({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const isAtBottomRef = useRef(true);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const token = getToken();
 
   const isClosed = FINAL_STATUSES.includes(currentStatus);
@@ -66,10 +68,30 @@ export default function OrderChat({
     return () => clearInterval(interval);
   }, [fetchMessages, isClosed]);
 
-  // Auto-scroll to bottom on new messages
+  // Scroll only within the messages container (never forces page scroll)
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior });
+  }, []);
+
+  // Track whether the user is near the bottom of the messages container
+  function handleMessagesScroll() {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const threshold = 50;
+    const atBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight <= threshold;
+    isAtBottomRef.current = atBottom;
+    setIsAtBottom(atBottom);
+  }
+
+  // Auto-scroll to bottom on new messages ONLY if user is already at the bottom
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (isAtBottomRef.current) {
+      scrollToBottom('smooth');
+    }
+  }, [messages, scrollToBottom]);
 
   async function handleSend() {
     const trimmed = input.trim();
@@ -92,6 +114,8 @@ export default function OrderChat({
       }
       setInput('');
       await fetchMessages();
+      // Always scroll to bottom after sending a message
+      scrollToBottom('smooth');
     } catch {
       setError('Network error. Please try again.');
     } finally {
@@ -125,7 +149,20 @@ export default function OrderChat({
       </div>
 
       {/* Messages */}
-      <div className="h-64 overflow-y-auto px-4 py-3 space-y-3 bg-gray-50">
+      <div className="relative">
+      {!isAtBottom && (
+        <button
+          onClick={() => scrollToBottom('smooth')}
+          className="absolute bottom-2 right-4 z-10 bg-green-700 hover:bg-green-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md transition-colors"
+        >
+          ↓ Latest
+        </button>
+      )}
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleMessagesScroll}
+        className="h-64 overflow-y-auto px-4 py-3 space-y-3 bg-gray-50"
+      >
         {loadingInitial ? (
           <p className="text-center text-gray-400 text-sm py-8">Loading messages…</p>
         ) : messages.length === 0 ? (
@@ -165,7 +202,7 @@ export default function OrderChat({
             );
           })
         )}
-        <div ref={bottomRef} />
+      </div>
       </div>
 
       {/* Input */}
