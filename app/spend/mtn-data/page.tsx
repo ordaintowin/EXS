@@ -23,14 +23,14 @@ function calcBundleCrypto(ghsAmount: number, cryptoValue: string, rates: LiveRat
 }
 
 const FALLBACK_BUNDLES: Bundle[] = [
-  { id: '1', label: '1GB - 1 Day', priceGhs: 7 },
-  { id: '2', label: '2GB - 2 Days', priceGhs: 12 },
-  { id: '3', label: '3GB - 7 Days', priceGhs: 18 },
-  { id: '4', label: '5GB - 7 Days', priceGhs: 25 },
-  { id: '5', label: '10GB - 30 Days', priceGhs: 45 },
-  { id: '6', label: '20GB - 30 Days', priceGhs: 80 },
-  { id: '7', label: '50GB - 30 Days', priceGhs: 180 },
-  { id: '8', label: '100GB - 30 Days', priceGhs: 320 },
+  { id: '1', label: 'No Expiry - 9.05GB', priceGhs: 100 },
+  { id: '2', label: 'No Expiry - 10.86GB', priceGhs: 120 },
+  { id: '3', label: 'No Expiry - 13.57GB', priceGhs: 150 },
+  { id: '4', label: 'No Expiry - 30.47GB', priceGhs: 200 },
+  { id: '5', label: 'No Expiry - 38.09GB', priceGhs: 250 },
+  { id: '6', label: 'No Expiry - 91.55GB', priceGhs: 300 },
+  { id: '7', label: 'No Expiry - 106.81GB', priceGhs: 350 },
+  { id: '8', label: 'No Expiry - 214.53GB', priceGhs: 399 },
 ];
 
 export default function MtnDataPage() {

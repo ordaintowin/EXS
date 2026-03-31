@@ -13,9 +13,8 @@ export async function POST(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const { id } = await params;
-
   try {
+    const { id } = await params;
     const body = await request.json().catch(() => ({}));
     const { banned } = body as { banned?: boolean };
 
@@ -36,7 +35,8 @@ export async function POST(
     });
 
     return NextResponse.json({ user: updated });
-  } catch {
+  } catch (err) {
+    console.error('ADMIN BAN USER ERROR:', err);
     return NextResponse.json({ error: 'Failed to update ban status' }, { status: 500 });
   }
 }

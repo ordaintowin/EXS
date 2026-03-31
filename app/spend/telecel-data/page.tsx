@@ -14,14 +14,14 @@ const TELECEL_PREFIXES = ['020', '050'];
 type Bundle = { id: string; label: string; priceGhs: number };
 
 const TELECEL_BUNDLES: Bundle[] = [
-  { id: '1', label: '1GB - 1 Day', priceGhs: 7 },
-  { id: '2', label: '2GB - 2 Days', priceGhs: 12 },
-  { id: '3', label: '3GB - 7 Days', priceGhs: 17 },
-  { id: '4', label: '5GB - 7 Days', priceGhs: 23 },
-  { id: '5', label: '10GB - 30 Days', priceGhs: 42 },
-  { id: '6', label: '20GB - 30 Days', priceGhs: 75 },
-  { id: '7', label: '50GB - 30 Days', priceGhs: 170 },
-  { id: '8', label: '100GB - 30 Days', priceGhs: 300 },
+  { id: '1', label: 'No Expiry - 10GB', priceGhs: 100 },
+  { id: '2', label: '30 days - 12.81GB', priceGhs: 100 },
+  { id: '3', label: 'No Expiry - 33.4GB', priceGhs: 200 },
+  { id: '4', label: '30 days - 39GB', priceGhs: 200 },
+  { id: '5', label: 'No Expiry - 100.29GB', priceGhs: 300 },
+  { id: '6', label: '30 days - 111.43GB', priceGhs: 300 },
+  { id: '7', label: 'No Expiry - 253.25GB', priceGhs: 400 },
+  { id: '8', label: '30 days - 263.38GB', priceGhs: 400 },
 ];
 
 function calcBundleCrypto(ghsAmount: number, cryptoValue: string, rates: LiveRates): string {

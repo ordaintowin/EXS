@@ -14,14 +14,14 @@ const AIRTELTIGO_PREFIXES = ['026', '056', '027', '057'];
 type Bundle = { id: string; label: string; priceGhs: number };
 
 const AIRTELTIGO_BUNDLES: Bundle[] = [
-  { id: '1', label: '1GB - 1 Day', priceGhs: 6 },
-  { id: '2', label: '2GB - 2 Days', priceGhs: 11 },
-  { id: '3', label: '3GB - 7 Days', priceGhs: 16 },
-  { id: '4', label: '5GB - 7 Days', priceGhs: 22 },
-  { id: '5', label: '10GB - 30 Days', priceGhs: 40 },
-  { id: '6', label: '20GB - 30 Days', priceGhs: 72 },
-  { id: '7', label: '50GB - 30 Days', priceGhs: 160 },
-  { id: '8', label: '100GB - 30 Days', priceGhs: 290 },
+  { id: '1', label: 'No Expiry - 10GB', priceGhs: 100 },
+  { id: '2', label: 'No Expiry - 33.4GB', priceGhs: 200 },
+  { id: '3', label: 'No Expiry - 100.3GB', priceGhs: 300 },
+  { id: '4', label: 'No Expiry - 117GB', priceGhs: 350 },
+  { id: '5', label: 'No Expiry - 253.3GB', priceGhs: 400 },
+  { id: '6', label: '30 days - XXL 12.8GB', priceGhs: 99 },
+  { id: '7', label: '30 days - XXL 39GB', priceGhs: 200 },
+  { id: '8', label: '30 days - XXL Pack 130.4GB', priceGhs: 350 },
 ];
 
 function calcBundleCrypto(ghsAmount: number, cryptoValue: string, rates: LiveRates): string {
