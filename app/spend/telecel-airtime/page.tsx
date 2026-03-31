@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { DEFAULT_LIVE_RATES, LiveRates } from '@/app/lib/crypto';
+import { SELL_CRYPTO_OPTIONS, calcCrypto, getCryptoLabel, DEFAULT_LIVE_RATES, LiveRates } from '@/app/lib/crypto';
 import { createOrder } from '@/app/lib/orders-api';
 import { getToken } from '@/app/lib/auth';
 import DailyQuotaDisplay from '@/app/components/DailyQuotaDisplay';
@@ -16,6 +16,7 @@ const AIRTIME_CRYPTO_OPTIONS = [
 
 const TELECEL_PREFIXES = ['020', '050'];
 const MIN_AMOUNT = 5;
+const AIRTIME_THRESHOLD = 100;
 
 export default function TelecelAirtimePage() {
   const router = useRouter();
@@ -50,12 +51,12 @@ export default function TelecelAirtimePage() {
   const [orderId, setOrderId] = useState('');
 
   const amountNum = parseFloat(amount);
-  const cryptoAmount =
-    crypto && amount && !isNaN(amountNum) && amountNum >= MIN_AMOUNT
-      ? (amountNum / rates.ghsPerUsd).toFixed(2)
-      : '—';
-  const cryptoLabel =
-    AIRTIME_CRYPTO_OPTIONS.find((c) => c.value === crypto)?.label ?? '';
+  const availableCryptoOptions =
+    !isNaN(amountNum) && amountNum >= AIRTIME_THRESHOLD
+      ? SELL_CRYPTO_OPTIONS
+      : AIRTIME_CRYPTO_OPTIONS;
+  const cryptoAmount = crypto && amount ? calcCrypto(amountNum, crypto, rates, MIN_AMOUNT) : '—';
+  const cryptoLabel = getCryptoLabel(crypto);
 
   function handlePhoneChange(val: string) {
     setPhone(val);
@@ -78,6 +79,10 @@ export default function TelecelAirtimePage() {
       setAmountError('Minimum top-up amount is 5 GHS');
     } else {
       setAmountError('');
+    }
+    if (!isNaN(n) && n < AIRTIME_THRESHOLD && crypto) {
+      const stillAvailable = AIRTIME_CRYPTO_OPTIONS.some((c) => c.value === crypto);
+      if (!stillAvailable) setCrypto('');
     }
   }
 
@@ -156,7 +161,7 @@ export default function TelecelAirtimePage() {
 
       {/* Warning box */}
       <div className="bg-yellow-50 border border-yellow-400 text-yellow-800 rounded-xl px-4 py-3 text-sm mb-6">
-        ⚠️ Minimum top-up is 5 GHS. Supported payment: Binance Pay &amp; Bybit Pay only.
+        ⚠️ Minimum top-up is 5 GHS. For amounts below 100 GHS: Binance Pay &amp; Bybit Pay only. For 100 GHS and above: all crypto options are available.
       </div>
 
       <div className="bg-white rounded-2xl shadow p-6 flex flex-col gap-5">
@@ -210,7 +215,7 @@ export default function TelecelAirtimePage() {
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             <option value="">— Choose payment method —</option>
-            {AIRTIME_CRYPTO_OPTIONS.map((c) => (
+            {availableCryptoOptions.map((c) => (
               <option key={c.value} value={c.value}>
                 {c.label}
               </option>
@@ -228,7 +233,9 @@ export default function TelecelAirtimePage() {
           </p>
           <p className="text-xs text-gray-500">Rate: 1 USD = {rates.ghsPerUsd} GHS (admin rate) — locked at confirmation</p>
           <p>Network fee: Zero ✅</p>
-          <p>Note: Binance Pay &amp; Bybit Pay have no network fees</p>
+          {(crypto === 'BINANCE_PAY' || crypto === 'BYBIT_PAY') && (
+            <p>Note: Binance Pay &amp; Bybit Pay have no network fees</p>
+          )}
         </div>
 
         {/* Daily Quota */}
