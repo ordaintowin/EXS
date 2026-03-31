@@ -4,7 +4,10 @@ import { prisma } from '@/app/api/lib/prisma';
 
 export async function POST(request: NextRequest) {
     const token = getTokenFromRequest(request);
-    const user = await verifyToken(token);
+    if (!token) {
+        return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+    const user = verifyToken(token);
 
     if (!user) {
         return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
