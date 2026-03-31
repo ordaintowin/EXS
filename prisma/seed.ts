@@ -4,36 +4,36 @@ import { DEFAULT_WALLET_ADDRESSES } from '@/app/lib/crypto';
 const prisma = new PrismaClient();
 
 const MTN_BUNDLES = [
-  { label: '1GB - 1 Day', priceGhs: 7, sortOrder: 1 },
-  { label: '2GB - 2 Days', priceGhs: 12, sortOrder: 2 },
-  { label: '3GB - 7 Days', priceGhs: 18, sortOrder: 3 },
-  { label: '5GB - 7 Days', priceGhs: 25, sortOrder: 4 },
-  { label: '10GB - 30 Days', priceGhs: 45, sortOrder: 5 },
-  { label: '20GB - 30 Days', priceGhs: 80, sortOrder: 6 },
-  { label: '50GB - 30 Days', priceGhs: 180, sortOrder: 7 },
-  { label: '100GB - 30 Days', priceGhs: 320, sortOrder: 8 },
+  { label: 'No Expiry - 9.05GB', priceGhs: 100, sortOrder: 1 },
+  { label: 'No Expiry - 10.86GB', priceGhs: 120, sortOrder: 2 },
+  { label: 'No Expiry - 13.57GB', priceGhs: 150, sortOrder: 3 },
+  { label: 'No Expiry - 30.47GB', priceGhs: 200, sortOrder: 4 },
+  { label: 'No Expiry - 38.09GB', priceGhs: 250, sortOrder: 5 },
+  { label: 'No Expiry - 91.55GB', priceGhs: 300, sortOrder: 6 },
+  { label: 'No Expiry - 106.81GB', priceGhs: 350, sortOrder: 7 },
+  { label: 'No Expiry - 214.53GB', priceGhs: 399, sortOrder: 8 },
 ];
 
 const TELECEL_BUNDLES = [
-  { label: '1GB - 1 Day', priceGhs: 7, sortOrder: 1 },
-  { label: '2GB - 2 Days', priceGhs: 12, sortOrder: 2 },
-  { label: '3GB - 7 Days', priceGhs: 17, sortOrder: 3 },
-  { label: '5GB - 7 Days', priceGhs: 23, sortOrder: 4 },
-  { label: '10GB - 30 Days', priceGhs: 42, sortOrder: 5 },
-  { label: '20GB - 30 Days', priceGhs: 75, sortOrder: 6 },
-  { label: '50GB - 30 Days', priceGhs: 170, sortOrder: 7 },
-  { label: '100GB - 30 Days', priceGhs: 300, sortOrder: 8 },
+  { label: 'No Expiry - 10GB', priceGhs: 100, sortOrder: 1 },
+  { label: '30 days - 12.81GB', priceGhs: 100, sortOrder: 2 },
+  { label: 'No Expiry - 33.4GB', priceGhs: 200, sortOrder: 3 },
+  { label: '30 days - 39GB', priceGhs: 200, sortOrder: 4 },
+  { label: 'No Expiry - 100.29GB', priceGhs: 300, sortOrder: 5 },
+  { label: '30 days - 111.43GB', priceGhs: 300, sortOrder: 6 },
+  { label: 'No Expiry - 253.25GB', priceGhs: 400, sortOrder: 7 },
+  { label: '30 days - 263.38GB', priceGhs: 400, sortOrder: 8 },
 ];
 
 const AIRTELTIGO_BUNDLES = [
-  { label: '1GB - 1 Day', priceGhs: 6, sortOrder: 1 },
-  { label: '2GB - 2 Days', priceGhs: 11, sortOrder: 2 },
-  { label: '3GB - 7 Days', priceGhs: 16, sortOrder: 3 },
-  { label: '5GB - 7 Days', priceGhs: 22, sortOrder: 4 },
-  { label: '10GB - 30 Days', priceGhs: 40, sortOrder: 5 },
-  { label: '20GB - 30 Days', priceGhs: 72, sortOrder: 6 },
-  { label: '50GB - 30 Days', priceGhs: 160, sortOrder: 7 },
-  { label: '100GB - 30 Days', priceGhs: 290, sortOrder: 8 },
+  { label: 'No Expiry - 10GB', priceGhs: 100, sortOrder: 1 },
+  { label: 'No Expiry - 33.4GB', priceGhs: 200, sortOrder: 2 },
+  { label: 'No Expiry - 100.3GB', priceGhs: 300, sortOrder: 3 },
+  { label: 'No Expiry - 117GB', priceGhs: 350, sortOrder: 4 },
+  { label: 'No Expiry - 253.3GB', priceGhs: 400, sortOrder: 5 },
+  { label: '30 days - XXL 12.8GB', priceGhs: 99, sortOrder: 6 },
+  { label: '30 days - XXL 39GB', priceGhs: 200, sortOrder: 7 },
+  { label: '30 days - XXL Pack 130.4GB', priceGhs: 350, sortOrder: 8 },
 ];
 
 async function main() {
