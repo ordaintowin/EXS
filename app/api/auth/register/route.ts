@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         email,
         phone,
         passwordHash,
-        isAdmin: email === 'admin@exspend.com',
+        isAdmin: false,
         referralCode: newUserReferralCode,
         referredBy: referrerId,
       },
