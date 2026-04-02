@@ -160,21 +160,24 @@ export async function POST(request: NextRequest) {
         }),
       });
 
-      await sendEmail({
-        to: 'admin@exspend.com',
-        subject: `New Order — #${newOrder.id.slice(0, 8).toUpperCase()}`,
-        html: adminNewOrderEmail({
-          orderId: newOrder.id,
-          service: newOrder.service,
-          amount: newOrder.amountGhs,
-          cryptoAmount: newOrder.cryptoAmount,
-          crypto: newOrder.cryptoAsset,
-          recipient: newOrder.recipient ?? '',
-          recipientName: newOrder.recipientName ?? '',
-          userName: orderUser.name,
-          userEmail: orderUser.email,
-        }),
-      });
+      const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+      if (adminEmail) {
+        await sendEmail({
+          to: adminEmail,
+          subject: `New Order — #${newOrder.id.slice(0, 8).toUpperCase()}`,
+          html: adminNewOrderEmail({
+            orderId: newOrder.id,
+            service: newOrder.service,
+            amount: newOrder.amountGhs,
+            cryptoAmount: newOrder.cryptoAmount,
+            crypto: newOrder.cryptoAsset,
+            recipient: newOrder.recipient ?? '',
+            recipientName: newOrder.recipientName ?? '',
+            userName: orderUser.name,
+            userEmail: orderUser.email,
+          }),
+        });
+      }
     }).catch(console.error);
 
     // In-app notification for order creation (user)

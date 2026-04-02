@@ -16,7 +16,7 @@ import {
   X,
   Settings,
 } from 'lucide-react';
-import { getCurrentUser, logout, ADMIN_EMAIL } from '@/app/lib/auth';
+import { getCurrentUser, logout } from '@/app/lib/auth';
 import NotificationBell from '@/app/components/NotificationBell';
 
 const navItems = [
@@ -87,7 +87,7 @@ export default function NavBar() {
                 );
               })}
 
-              {user?.email === ADMIN_EMAIL && (
+              {user?.isAdmin === true && (
                 <Link
                   href="/admin"
                   className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors text-xs font-medium ${
@@ -182,7 +182,7 @@ export default function NavBar() {
                 </Link>
               )}
 
-              {user?.email === ADMIN_EMAIL && (
+              {user?.isAdmin === true && (
                 <Link
                   href="/admin"
                   onClick={() => setMenuOpen(false)}

@@ -12,7 +12,6 @@ export type User = {
 const AUTH_KEY = 'exspend_user';
 const TOKEN_KEY = 'exspend_token';
 export const USERS_KEY = 'exspend_users';
-export const ADMIN_EMAIL = 'admin@exspend.com';
 
 export function getCurrentUser(): User | null {
   if (typeof window === 'undefined') return null;
@@ -31,7 +30,7 @@ export function getToken(): string | null {
 
 export function getIsAdmin(): boolean {
   const user = getCurrentUser();
-  return user?.email === ADMIN_EMAIL || user?.isAdmin === true;
+  return user?.isAdmin === true;
 }
 
 export function setCurrentUser(user: User, token: string): void {

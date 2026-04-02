@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, ADMIN_EMAIL, logout } from '@/app/lib/auth';
+import { getCurrentUser, logout } from '@/app/lib/auth';
 import AdminSidebar from './components/AdminSidebar';
 
 const IDLE_TIMEOUT_MS = 5 * 60 * 1000;  // 5 minutes
@@ -38,7 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.replace('/login');
       return;
     }
-    if (user.email !== ADMIN_EMAIL) {
+    if (!user.isAdmin) {
       router.replace('/spend');
       return;
     }
