@@ -98,6 +98,16 @@ export default function AdminWalletsPage() {
         Manage wallet addresses shown to users when they buy crypto.
       </p>
 
+      <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p className="font-semibold">Automatic deposit alerts are inactive</p>
+        <p className="mt-1">
+          The webhook receiver is ready, but Tatum notifications have not been enabled. Tatum currently charges 50 credits per notification and 50 credits per monitored alert per day. Enabling it requires approval, securely configured provider credentials, and a public HTTPS callback to <span className="font-mono">/api/webhooks/tatum</span>.
+        </p>
+        <p className="mt-1">
+          Until then, incoming transfers are not monitored automatically. Even after activation, detected transfers must be reviewed before any order is marked paid or completed.
+        </p>
+      </div>
+
       {loading ? (
         <p className="text-gray-400 text-sm">Loading wallet settings…</p>
       ) : (

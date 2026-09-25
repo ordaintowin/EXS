@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import BanModal from '@/app/components/BanModal';
 import { getLiveCryptoPriceText } from '@/app/lib/crypto';
 
-const ASSETS = ['BTC', 'BNB', 'ETH', 'USDT (TRC-20)', 'USDT (BEP-20)', 'USDC (BEP-20)'];
+const ASSETS = ['BTC', 'BNB', 'ETH', 'USDT (TRC-20)', 'USDT (BEP-20)', 'USDC (BEP-20)', 'USDT (Polygon)', 'USDC (Polygon)'];
+
+type LinkedWallet = { id: string; chain: string; address: string };
 
 function assetToSettingsKey(asset: string): string {
   const map: Record<string, string> = {
@@ -15,16 +17,27 @@ function assetToSettingsKey(asset: string): string {
     'USDT (TRC-20)': 'USDT_TRC20',
     'USDT (BEP-20)': 'USDT_BEP20',
     'USDC (BEP-20)': 'USDC_BEP20',
+    'USDT (Polygon)': 'USDT_POLYGON',
+    'USDC (Polygon)': 'USDC_POLYGON',
   };
   return map[asset] ?? asset;
 }
 
+function walletChainForAsset(asset: string): string {
+  if (asset === 'BTC') return 'bitcoin';
+  if (asset.includes('TRC-20')) return 'tron';
+  if (asset.includes('BEP-20') || asset === 'BNB') return 'bsc';
+  if (asset.includes('Polygon')) return 'polygon';
+  return 'ethereum';
+}
+
 function isEVMAsset(asset: string) {
-  return ['BNB', 'ETH', 'USDT (TRC-20)', 'USDT (BEP-20)', 'USDC (BEP-20)'].includes(asset);
+  return asset !== 'BTC' && !asset.includes('TRC-20');
 }
 
 function validateWallet(address: string, asset: string): boolean {
   if (asset === 'BTC') return /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,62}$/.test(address);
+  if (asset.includes('TRC-20')) return /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(address);
   return /^0x[0-9a-fA-F]{40}$/.test(address);
 }
 
@@ -96,6 +109,8 @@ export default function BuyPage() {
 
   // Step 2
   const [walletAddress, setWalletAddress] = useState('');
+  const [linkedWallets, setLinkedWallets] = useState<LinkedWallet[]>([]);
+  const [selectedLinkedWalletId, setSelectedLinkedWalletId] = useState('');
   const [walletError, setWalletError] = useState<string | null>(null);
 
   // Step 4 – payment instructions
@@ -149,6 +164,19 @@ export default function BuyPage() {
   }, []);
 
   useEffect(() => {
+    const token = localStorage.getItem('exspend_token');
+    if (!token) return;
+
+    fetch('/api/wallets/linked', { headers: { Authorization: `Bearer ${token}` } })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const data = await response.json();
+        setLinkedWallets(data.wallets ?? []);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     async function loadData() {
       setLoadingRates(true);
       setLoadingPaymentSettings(true);
@@ -180,6 +208,9 @@ export default function BuyPage() {
   const cryptoAmount = ghsToCrypto(ghsNum, asset, btcUsd, bnbUsd, ethUsd, ghsPerUsd);
   const cryptoRateGhs = ghsPerUsd;
   const cryptoRateUsd = asset === 'BTC' ? btcUsd : asset === 'BNB' ? bnbUsd : asset === 'ETH' ? ethUsd : 1;
+  const matchingLinkedWallets = linkedWallets.filter(
+    (wallet) => wallet.chain === walletChainForAsset(asset),
+  );
 
   const bankSetting = paymentSettings['bank_details'] as AdminPaymentSetting | undefined;
 
@@ -210,6 +241,8 @@ export default function BuyPage() {
       setWalletError(
         asset === 'BTC'
           ? 'Invalid BTC address. Must start with bc1, 1, or 3.'
+          : asset.includes('TRC-20')
+          ? 'Invalid TRON address. It must start with T and contain 34 characters.'
           : 'Invalid EVM address. Must start with 0x followed by 40 hex characters.'
       );
       return;
@@ -294,6 +327,7 @@ export default function BuyPage() {
     setAsset('BTC');
     setAmountGhs('');
     setWalletAddress('');
+    setSelectedLinkedWalletId('');
     setWalletError(null);
     setOrderId(null);
     setTimeLeft(ORDER_TIMEOUT_SECONDS);
@@ -595,14 +629,41 @@ export default function BuyPage() {
 
             {walletError && <p className="bg-red-100 text-red-700 rounded-lg px-4 py-2 text-sm mb-4">{walletError}</p>}
 
+            {matchingLinkedWallets.length > 0 ? (
+              <div className="mb-4">
+                <label className="block text-green-900 font-semibold mb-1 text-sm">Use one of your linked wallets</label>
+                <select
+                  value={selectedLinkedWalletId}
+                  onChange={(e) => {
+                    const selected = matchingLinkedWallets.find((wallet) => wallet.id === e.target.value);
+                    setSelectedLinkedWalletId(selected?.id ?? '');
+                    setWalletAddress(selected?.address ?? '');
+                    setWalletError(null);
+                  }}
+                  className="w-full border border-green-300 rounded-lg px-3 py-2 text-green-900 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="">Enter another address</option>
+                  {matchingLinkedWallets.map((wallet) => (
+                    <option key={wallet.id} value={wallet.id}>{wallet.chain}: {wallet.address}</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <p className="text-green-700 text-xs mb-3">
+                Have a verified wallet? <a href="/wallets" className="underline font-semibold">Link it here</a> or enter any compatible address below.
+              </p>
+            )}
+
             <label className="block text-green-900 font-semibold mb-1 text-sm">Your {asset} Wallet Address</label>
             <input
               type="text"
               value={walletAddress}
-              onChange={(e) => { setWalletAddress(e.target.value); setWalletError(null); }}
+              onChange={(e) => { setWalletAddress(e.target.value); setSelectedLinkedWalletId(''); setWalletError(null); }}
               placeholder={
                 asset === 'BTC'
                   ? 'bc1q\u2026 or 1\u2026 or 3\u2026'
+                  : asset.includes('TRC-20')
+                  ? 'T\u2026'
                   : isEVMAsset(asset) ? '0x\u2026' : ''
               }
               className="w-full border border-green-300 rounded-lg px-3 py-2 text-green-900 bg-white font-mono text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-green-500"

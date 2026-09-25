@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { registerUser, getCurrentUser } from '@/app/lib/auth';
+import { registerUser, getCurrentUser, getToken } from '@/app/lib/auth';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -13,6 +13,7 @@ export default function SignupPage() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [connectWalletAfterSignup, setConnectWalletAfterSignup] = useState(false);
   const [referralCode, setReferralCode] = useState('');
   const [referralValid, setReferralValid] = useState<boolean | null>(null);
   const [referralChecking, setReferralChecking] = useState(false);
@@ -21,7 +22,7 @@ export default function SignupPage() {
 
   useEffect(() => {
     const user = getCurrentUser();
-    if (user) {
+    if (user && getToken()) {
       router.replace('/spend');
     } else {
       setMounted(true);
@@ -83,7 +84,7 @@ export default function SignupPage() {
     setLoading(false);
 
     if (result.success) {
-      router.push('/spend');
+      router.push(connectWalletAfterSignup ? '/wallets' : '/spend');
     } else {
       setError(result.error ?? 'Registration failed.');
     }
@@ -198,6 +199,21 @@ export default function SignupPage() {
               <p className="text-xs text-green-600 mt-1">Referral code applied! Your friend will earn 200 MB when you get verified.</p>
             )}
           </div>
+
+          <label className="flex items-start gap-2 text-sm text-green-800">
+            <input
+              type="checkbox"
+              checked={connectWalletAfterSignup}
+              onChange={(e) => setConnectWalletAfterSignup(e.target.checked)}
+              className="mt-0.5 accent-green-700"
+            />
+            <span>
+              Connect an external wallet after signup <span className="text-green-600">(optional)</span>
+              <span className="block text-xs text-green-600 mt-0.5">
+                You can also do this later. Exspend never asks for your recovery phrase or private key.
+              </span>
+            </span>
+          </label>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
 

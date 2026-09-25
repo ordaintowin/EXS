@@ -7,7 +7,18 @@ import { getToken } from '@/app/lib/auth';
 import { getLiveCryptoPriceText } from '@/app/lib/crypto';
 import BanModal from '@/app/components/BanModal';
 
-const ASSETS = ['BTC', 'BNB', 'ETH', 'USDT (TRC-20)', 'USDT (BEP-20)', 'USDC (BEP-20)', 'Binance Pay', 'Bybit Pay'];
+const ASSETS = ['BTC', 'BNB', 'ETH', 'USDT (TRC-20)', 'USDT (BEP-20)', 'USDC (BEP-20)', 'USDT (Polygon)', 'USDC (Polygon)', 'Binance Pay', 'Bybit Pay'];
+
+type LinkedWallet = { id: string; chain: string; address: string };
+
+function walletChainForAsset(asset: string): string | null {
+  if (asset === 'BTC') return 'bitcoin';
+  if (asset.includes('TRC-20')) return 'tron';
+  if (asset.includes('BEP-20') || asset === 'BNB') return 'bsc';
+  if (asset.includes('Polygon')) return 'polygon';
+  if (asset === 'ETH') return 'ethereum';
+  return null;
+}
 
 function assetToSettingsKey(asset: string): string {
   const map: Record<string, string> = {
@@ -17,6 +28,8 @@ function assetToSettingsKey(asset: string): string {
     'USDT (TRC-20)': 'USDT_TRC20',
     'USDT (BEP-20)': 'USDT_BEP20',
     'USDC (BEP-20)': 'USDC_BEP20',
+    'USDT (Polygon)': 'USDT_POLYGON',
+    'USDC (Polygon)': 'USDC_POLYGON',
     'Binance Pay': 'BINANCE_PAY',
     'Bybit Pay': 'BYBIT_PAY',
   };
@@ -68,6 +81,8 @@ export default function SellPage() {
   const [bnbUsd, setBnbUsd] = useState(0);
   const [ethUsd, setEthUsd] = useState(0);
   const [walletAddresses, setWalletAddresses] = useState<Record<string, string>>({});
+  const [linkedWallets, setLinkedWallets] = useState<LinkedWallet[]>([]);
+  const [sendingWalletAddress, setSendingWalletAddress] = useState('');
 
   // Step 1
   const [asset, setAsset] = useState('BTC');
@@ -86,6 +101,19 @@ export default function SellPage() {
 
   // Step 4 – success
   const [orderId, setOrderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = getToken();
+    if (!token) return;
+
+    fetch('/api/wallets/linked', { headers: { Authorization: `Bearer ${token}` } })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const data = await response.json();
+        setLinkedWallets(data.wallets ?? []);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     async function loadRates() {
@@ -128,6 +156,9 @@ export default function SellPage() {
   const cryptoRateUsd = asset === 'BTC' ? btcUsd : asset === 'BNB' ? bnbUsd : asset === 'ETH' ? ethUsd : 1;
   const settingsKey = assetToSettingsKey(asset);
   const receiveWallet = walletAddresses[settingsKey] ?? '';
+  const matchingLinkedWallets = linkedWallets.filter(
+    (wallet) => wallet.chain === walletChainForAsset(asset),
+  );
 
   const rateInfo = loadingRates
     ? 'Loading rates…'
@@ -172,6 +203,7 @@ export default function SellPage() {
         amountGhs: finalGhsAmount,
         cryptoRateGhs: ghsPerUsd,
         cryptoRateUsd,
+        ...(sendingWalletAddress ? { userWalletAddress: sendingWalletAddress } : {}),
       };
 
       if (payoutMethod === 'momo') {
@@ -224,6 +256,7 @@ export default function SellPage() {
     setBankName('');
     setBankAccount('');
     setBankAccountName('');
+    setSendingWalletAddress('');
     setOrderId(null);
     setError(null);
   }
@@ -345,6 +378,30 @@ export default function SellPage() {
             )}
 
             <p className="text-green-600 text-xs mb-5">Minimum: equivalent of GHS 150</p>
+
+            {walletChainForAsset(asset) && (
+              <div className="mb-5">
+                <label className="block text-green-900 font-semibold mb-1 text-sm">
+                  Wallet you’ll send from <span className="font-normal text-green-600">(optional)</span>
+                </label>
+                {matchingLinkedWallets.length > 0 ? (
+                  <select
+                    value={sendingWalletAddress}
+                    onChange={(e) => setSendingWalletAddress(e.target.value)}
+                    className="w-full border border-green-300 rounded-lg px-3 py-2 text-green-900 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="">Choose later</option>
+                    {matchingLinkedWallets.map((wallet) => (
+                      <option key={wallet.id} value={wallet.address}>{wallet.address}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-green-700 text-xs">
+                    <a href="/wallets" className="underline font-semibold">Link a wallet</a> to include its verified address with your order.
+                  </p>
+                )}
+              </div>
+            )}
 
             <button
               onClick={handleStep1Continue}

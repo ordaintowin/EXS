@@ -30,6 +30,8 @@ model User {
   passwordResets   PasswordReset[]
   notifications    Notification[]
   orderMessages    OrderMessage[]
+  linkedWallets    LinkedWallet[]
+  walletChallenges WalletChallenge[]
   referralRewards  ReferralReward[]     @relation("ReferrerRewards")
   referredRewards  ReferralReward[]     @relation("ReferredUserRewards")
   dailyQuota       UserDailyQuota?
@@ -214,6 +216,61 @@ model Notification {
   link           String?
   relatedOrderId String?
   createdAt      DateTime @default(now())
+}
+
+enum WalletChain {
+  ethereum
+  bsc
+  polygon
+  tron
+  bitcoin
+}
+
+model LinkedWallet {
+  id         String     @id @default(uuid())
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chain      WalletChain
+  address    String
+  verifiedAt DateTime   @default(now())
+  createdAt  DateTime   @default(now())
+
+  @@unique([chain, address])
+  @@index([userId, chain])
+}
+
+model WalletChallenge {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chain     WalletChain
+  address   String
+  message   String      @db.Text
+  expiresAt DateTime
+  consumedAt DateTime?
+  createdAt DateTime    @default(now())
+
+  @@index([userId, chain, address, createdAt])
+  @@index([expiresAt])
+}
+
+model ChainDeposit {
+  id              String     @id @default(uuid())
+  chain           WalletChain
+  txHash          String
+  destination     String
+  sourceAddress   String?
+  asset           String
+  tokenAddress    String?
+  amount          String
+  blockNumber     String?
+  status          String     @default("detected")
+  providerPayload Json
+  createdAt       DateTime   @default(now())
+
+  @@unique([chain, txHash, destination, asset])
+  @@index([createdAt])
+  @@index([chain, destination])
 }
 
 model OrderMessage {

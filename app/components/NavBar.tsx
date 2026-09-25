@@ -10,11 +10,13 @@ import {
   ClipboardList,
   HelpCircle,
   FileText,
+  History,
   LogOut,
   User,
   Menu,
   X,
   Settings,
+  Wallet,
 } from 'lucide-react';
 import { getCurrentUser, logout } from '@/app/lib/auth';
 import NotificationBell from '@/app/components/NotificationBell';
@@ -24,6 +26,8 @@ const navItems = [
   { icon: TrendingUp, label: 'Buy', href: '/buy' },
   { icon: TrendingDown, label: 'Sell', href: '/sell' },
   { icon: ClipboardList, label: 'Orders', href: '/orders' },
+  { icon: History, label: 'History', href: '/history' },
+  { icon: Wallet, label: 'Wallets', href: '/wallets' },
   { icon: HelpCircle, label: 'Help', href: '/help' },
   { icon: FileText, label: 'Policies', href: '/policies' },
 ];
