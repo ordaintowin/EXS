@@ -37,6 +37,10 @@ const WALLET_FIELDS = [
 
 type WalletKey = typeof WALLET_FIELDS[number]['key'];
 type WalletData = Record<WalletKey, string>;
+type DepositAlertReadiness = {
+  signatureSecretConfigured: boolean;
+  configuredAddressCount: number;
+};
 
 const emptyWallets = (): WalletData =>
   Object.fromEntries(WALLET_FIELDS.map(({ key }) => [key, ''])) as WalletData;
@@ -44,18 +48,29 @@ const emptyWallets = (): WalletData =>
 export default function AdminWalletsPage() {
   const router = useRouter();
   const [wallets, setWallets] = useState<WalletData>(emptyWallets());
+  const [depositAlerts, setDepositAlerts] = useState<DepositAlertReadiness>({
+    signatureSecretConfigured: false,
+    configuredAddressCount: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const fetchWallets = useCallback(async () => {
-    const res = await fetch('/api/admin/wallets', { headers: authHeaders() });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (data.wallets) {
-      setWallets((prev) => ({ ...prev, ...data.wallets }));
+    try {
+      const res = await fetch('/api/admin/wallets', { headers: authHeaders() });
+      if (!res.ok) throw new Error('Could not load wallet settings.');
+      const data = await res.json();
+      if (data.wallets) setWallets((prev) => ({ ...prev, ...data.wallets }));
+      if (data.depositAlerts) setDepositAlerts(data.depositAlerts);
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Could not load wallet settings.',
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -82,6 +97,8 @@ export default function AdminWalletsPage() {
         const data = await res.json();
         setMessage({ type: 'error', text: data.error ?? 'Failed to save wallet settings.' });
       } else {
+        const data = await res.json();
+        if (data.depositAlerts) setDepositAlerts(data.depositAlerts);
         setMessage({ type: 'success', text: 'Wallet addresses saved successfully.' });
       }
     } catch {
@@ -98,13 +115,34 @@ export default function AdminWalletsPage() {
         Manage wallet addresses shown to users when they buy crypto.
       </p>
 
-      <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-        <p className="font-semibold">Automatic deposit alerts are inactive</p>
-        <p className="mt-1">
-          The webhook receiver is ready, but Tatum notifications have not been enabled. Tatum currently charges 50 credits per notification and 50 credits per monitored alert per day. Enabling it requires approval, securely configured provider credentials, and a public HTTPS callback to <span className="font-mono">/api/webhooks/tatum</span>.
+      <div className={`mb-6 rounded-lg border px-4 py-3 text-sm ${
+        depositAlerts.signatureSecretConfigured && depositAlerts.configuredAddressCount > 0
+          ? 'border-blue-200 bg-blue-50 text-blue-950'
+          : 'border-amber-200 bg-amber-50 text-amber-950'
+      }`}>
+        <p className="font-semibold">
+          {depositAlerts.signatureSecretConfigured && depositAlerts.configuredAddressCount > 0
+            ? 'Webhook prerequisites are configured; provider monitoring still needs to be active'
+            : 'Automatic deposit alerts need setup'}
         </p>
-        <p className="mt-1">
-          Until then, incoming transfers are not monitored automatically. Even after activation, detected transfers must be reviewed before any order is marked paid or completed.
+        <ul className="mt-2 space-y-1 text-xs">
+          <li>
+            Signature secret: {depositAlerts.signatureSecretConfigured ? 'configured' : 'missing'}.
+            {!depositAlerts.signatureSecretConfigured && ' Add TATUM_HMAC_SECRET in Replit Secrets; never put it in client code or commit it.'}
+          </li>
+          <li>
+            Admin blockchain receive addresses: {depositAlerts.configuredAddressCount} configured.
+            {' '}Configure the same addresses and networks in your monitoring provider.
+          </li>
+          <li>
+            Set the provider callback to your app’s public HTTPS endpoint <span className="font-mono">/api/webhooks/tatum</span> and configure its signature to use the same secret.
+          </li>
+          <li>
+            When a valid event arrives, Exspend records it and alerts admins. Enable browser alerts from the admin notification bell; keep manual confirmation before completing orders.
+          </li>
+        </ul>
+        <p className="mt-2 text-xs">
+          This checklist reports app-side readiness only; it cannot confirm that the provider is actively monitoring an address. Review the provider dashboard and its current fees.
         </p>
       </div>
 

@@ -5,6 +5,16 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { registerUser, getCurrentUser, getToken } from '@/app/lib/auth';
 
+type WalletSetup = 'metamask' | 'trust' | 'other' | 'create' | 'later';
+
+const WALLET_SETUP_OPTIONS: { value: WalletSetup; title: string; description: string }[] = [
+  { value: 'metamask', title: 'MetaMask', description: 'I already use MetaMask' },
+  { value: 'trust', title: 'Trust Wallet', description: 'I already use Trust Wallet' },
+  { value: 'other', title: 'Another wallet', description: 'I use a different compatible wallet' },
+  { value: 'create', title: 'I need a wallet', description: 'Show me how to create one safely' },
+  { value: 'later', title: 'Skip for now', description: 'I’ll connect a wallet later' },
+];
+
 export default function SignupPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -13,7 +23,7 @@ export default function SignupPage() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [connectWalletAfterSignup, setConnectWalletAfterSignup] = useState(false);
+  const [walletSetup, setWalletSetup] = useState<WalletSetup>('later');
   const [referralCode, setReferralCode] = useState('');
   const [referralValid, setReferralValid] = useState<boolean | null>(null);
   const [referralChecking, setReferralChecking] = useState(false);
@@ -84,7 +94,13 @@ export default function SignupPage() {
     setLoading(false);
 
     if (result.success) {
-      router.push(connectWalletAfterSignup ? '/wallets' : '/spend');
+      if (walletSetup === 'later') {
+        router.push('/spend');
+      } else if (walletSetup === 'create') {
+        router.push('/wallets?setup=create');
+      } else {
+        router.push(`/wallets?wallet=${walletSetup}`);
+      }
     } else {
       setError(result.error ?? 'Registration failed.');
     }
@@ -200,20 +216,37 @@ export default function SignupPage() {
             )}
           </div>
 
-          <label className="flex items-start gap-2 text-sm text-green-800">
-            <input
-              type="checkbox"
-              checked={connectWalletAfterSignup}
-              onChange={(e) => setConnectWalletAfterSignup(e.target.checked)}
-              className="mt-0.5 accent-green-700"
-            />
-            <span>
-              Connect an external wallet after signup <span className="text-green-600">(optional)</span>
-              <span className="block text-xs text-green-600 mt-0.5">
-                You can also do this later. Exspend never asks for your recovery phrase or private key.
-              </span>
-            </span>
-          </label>
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium text-green-900">Choose your wallet setup <span className="font-normal text-green-600">(optional)</span></legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {WALLET_SETUP_OPTIONS.map((option) => (
+                <label
+                  key={option.value}
+                  className={`flex cursor-pointer items-start gap-2 rounded-xl border p-3 text-sm transition-colors ${
+                    walletSetup === option.value
+                      ? 'border-green-700 bg-green-50 ring-1 ring-green-700'
+                      : 'border-gray-200 hover:border-green-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="walletSetup"
+                    value={option.value}
+                    checked={walletSetup === option.value}
+                    onChange={() => setWalletSetup(option.value)}
+                    className="mt-1 accent-green-700"
+                  />
+                  <span>
+                    <span className="block font-semibold text-green-900">{option.title}</span>
+                    <span className="mt-0.5 block text-xs text-gray-600">{option.description}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-green-700">
+              Wallets are created in their official app, not from your Exspend account details. Exspend never asks for a recovery phrase or private key.
+            </p>
+          </fieldset>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
 

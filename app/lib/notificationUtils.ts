@@ -9,7 +9,7 @@ export type NotificationType = {
   createdAt: string;
 };
 
-export const NOTIFICATION_POLL_INTERVAL_MS = 30000;
+export const NOTIFICATION_POLL_INTERVAL_MS = 10000;
 export const NOTIFICATION_DISPLAY_LIMIT = 10;
 
 export function timeAgo(dateStr: string): string {

@@ -12,7 +12,11 @@ type Holding = { asset: string; name: string; amount: string; usdValue: number; 
 type WalletBalance = { walletId: string; holdings: Holding[]; error: string | null };
 type Eip1193Provider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  isMetaMask?: boolean;
+  isTrust?: boolean;
+  providers?: Eip1193Provider[];
 };
+type EvmWalletApp = 'metamask' | 'trust' | 'other';
 type WalletApi = {
   request?: (args: { method: string }) => Promise<unknown>;
 };
@@ -50,6 +54,24 @@ const EVM_CONFIG: Record<'ethereum' | 'bsc' | 'polygon', { chainId: string; labe
 
 const CHAIN_OPTIONS: Chain[] = ['ethereum', 'bsc', 'polygon', 'tron', 'bitcoin'];
 
+function getEvmProvider(app: EvmWalletApp): Eip1193Provider | undefined {
+  const injected = window.ethereum;
+  const candidates = [...(injected?.providers ?? []), ...(injected ? [injected] : [])];
+  const providers = [...new Set(candidates)];
+  if (app === 'other') return injected;
+
+  const selected = app === 'metamask'
+    ? providers.find((provider) => provider.isMetaMask && !provider.isTrust)
+    : providers.find((provider) => provider.isTrust);
+  if (selected) return selected;
+  if (providers.length === 1) {
+    const onlyProvider = providers[0];
+    if (app === 'metamask' && onlyProvider.isMetaMask && !onlyProvider.isTrust) return onlyProvider;
+    if (app === 'trust' && onlyProvider.isTrust) return onlyProvider;
+  }
+  return undefined;
+}
+
 function authHeaders(): HeadersInit {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken() ?? ''}` };
 }
@@ -70,6 +92,8 @@ async function responseError(response: Response, fallback: string) {
 export default function WalletsPage() {
   const router = useRouter();
   const [chain, setChain] = useState<Chain>('ethereum');
+  const [walletApp, setWalletApp] = useState<EvmWalletApp>('metamask');
+  const [showCreateWalletHelp, setShowCreateWalletHelp] = useState(false);
   const [wallets, setWallets] = useState<LinkedWallet[]>([]);
   const [balances, setBalances] = useState<Record<string, WalletBalance>>({});
   const [ghsPerUsd, setGhsPerUsd] = useState<number | null>(null);
@@ -116,6 +140,15 @@ export default function WalletsPage() {
     void loadWallets();
   }, [loadWallets]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const provider = params.get('wallet');
+    if (provider === 'metamask' || provider === 'trust' || provider === 'other') {
+      setWalletApp(provider);
+    }
+    setShowCreateWalletHelp(params.get('setup') === 'create');
+  }, []);
+
   async function createChallenge(address: string) {
     const response = await fetch('/api/wallets/challenge', {
       method: 'POST',
@@ -146,8 +179,15 @@ export default function WalletsPage() {
     setNotice('');
     try {
       if (chain === 'ethereum' || chain === 'bsc' || chain === 'polygon') {
-        const provider = window.ethereum;
-        if (!provider) throw new Error('Install MetaMask or Trust Wallet, then reopen this page in that wallet’s browser.');
+        const provider = getEvmProvider(walletApp);
+        if (!provider) {
+          const selectedName = walletApp === 'metamask' ? 'MetaMask' : 'Trust Wallet';
+          throw new Error(
+            walletApp === 'other'
+              ? 'No compatible Ethereum wallet was detected. Open this page from your wallet app’s browser.'
+              : `${selectedName} was not detected. Open this page in ${selectedName}’s browser or install its official browser extension.`,
+          );
+        }
         const config = EVM_CONFIG[chain];
         const accounts = await provider.request({ method: 'eth_requestAccounts' }) as string[];
         const address = accounts?.[0];
@@ -233,10 +273,36 @@ export default function WalletsPage() {
           <div className="mb-4 flex items-center gap-3">
             <span className="rounded-xl bg-green-50 p-2 text-green-800"><Wallet size={22} /></span>
             <div>
-              <h2 className="font-semibold text-gray-900">Link an existing wallet</h2>
-              <p className="text-xs text-gray-500">A message signature proves address ownership; it does not move funds.</p>
+              <h2 className="font-semibold text-gray-900">Connect your wallet</h2>
+              <p className="text-xs text-gray-500">A one-time signature proves address ownership; it cannot move funds or approve a transaction.</p>
             </div>
           </div>
+
+          {showCreateWalletHelp && (
+            <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
+              <p className="font-semibold">Create your wallet with its official provider first</p>
+              <p className="mt-1 text-xs">
+                Create it in the wallet app, keep its recovery phrase private and offline, then return here and connect it. Do not use your Exspend password or email as a wallet recovery method.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold underline">
+                <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer">MetaMask official download</a>
+                <a href="https://trustwallet.com/download" target="_blank" rel="noopener noreferrer">Trust Wallet official download</a>
+              </div>
+            </div>
+          )}
+
+          <label className="mb-3 block text-sm font-medium text-gray-700">
+            Wallet app for Ethereum-compatible networks
+            <select
+              value={walletApp}
+              onChange={(event) => setWalletApp(event.target.value as EvmWalletApp)}
+              className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-3 py-3 text-sm"
+            >
+              <option value="metamask">MetaMask</option>
+              <option value="trust">Trust Wallet</option>
+              <option value="other">Another compatible wallet</option>
+            </select>
+          </label>
 
           <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
             <label className="text-sm font-medium text-gray-700">
@@ -259,8 +325,8 @@ export default function WalletsPage() {
             </button>
           </div>
           <p className="mt-3 text-xs text-gray-500">
-            MetaMask and Trust Wallet work on Ethereum, BNB Chain, and Polygon. Use TronLink for Tron and UniSat for Bitcoin.
-            If you do not have a wallet, create one in its official app, then return here. You can also skip linking and enter a destination address when buying.
+            MetaMask, Trust Wallet, and compatible wallet apps work with Ethereum, BNB Chain, and Polygon. Use TronLink for Tron or UniSat for Bitcoin. On mobile, open this page inside the wallet app’s browser.
+            You can also skip linking and enter a destination address when buying.
           </p>
 
           {error && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}

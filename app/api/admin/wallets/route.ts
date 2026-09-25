@@ -4,6 +4,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTokenFromRequest, verifyToken } from '@/app/api/lib/jwt';
 import { prisma } from '@/app/api/lib/prisma';
 
+const MONITORED_ADDRESS_FIELDS = [
+  'USDT_TRC20',
+  'USDT_BEP20',
+  'USDT_POLYGON',
+  'USDC_BEP20',
+  'USDC_POLYGON',
+  'BTC',
+  'BNB',
+  'ETH',
+] as const;
+
+function getDepositAlertReadiness(settings: Record<string, unknown> | null) {
+  const configuredAddressCount = settings
+    ? MONITORED_ADDRESS_FIELDS.filter((field) => (
+        typeof settings[field] === 'string' && (settings[field] as string).trim().length > 0
+      )).length
+    : 0;
+  return {
+    signatureSecretConfigured: Boolean(process.env.TATUM_HMAC_SECRET),
+    configuredAddressCount,
+  };
+}
+
 function requireAdmin(request: NextRequest) {
   const token = getTokenFromRequest(request);
   const user = token ? verifyToken(token) : null;
@@ -20,19 +43,21 @@ export async function GET(request: NextRequest) {
 
   try {
     const settings = await prisma.walletSettings.findUnique({ where: { id: 'singleton' } });
+    const wallets = settings ?? {
+      USDT_TRC20: '',
+      USDT_BEP20: '',
+      USDT_POLYGON: '',
+      USDC_BEP20: '',
+      USDC_POLYGON: '',
+      BTC: '',
+      BNB: '',
+      ETH: '',
+      BINANCE_PAY: '',
+      BYBIT_PAY: '',
+    };
     return NextResponse.json({
-      wallets: settings ?? {
-        USDT_TRC20: '',
-        USDT_BEP20: '',
-        USDT_POLYGON: '',
-        USDC_BEP20: '',
-        USDC_POLYGON: '',
-        BTC: '',
-        BNB: '',
-        ETH: '',
-        BINANCE_PAY: '',
-        BYBIT_PAY: '',
-      },
+      wallets,
+      depositAlerts: getDepositAlertReadiness(wallets),
     });
   } catch {
     return NextResponse.json({ error: 'Failed to fetch wallet settings' }, { status: 500 });
@@ -66,7 +91,10 @@ export async function PATCH(request: NextRequest) {
       update: data,
     });
 
-    return NextResponse.json({ wallets: settings });
+    return NextResponse.json({
+      wallets: settings,
+      depositAlerts: getDepositAlertReadiness(settings),
+    });
   } catch {
     return NextResponse.json({ error: 'Failed to update wallet settings' }, { status: 500 });
   }

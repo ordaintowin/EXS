@@ -6,6 +6,17 @@ import { orderConfirmationEmail, adminNewOrderEmail } from '@/app/api/lib/email-
 import { DEFAULT_WALLET_ADDRESSES } from '@/app/lib/crypto';
 import { OrderType, ServiceType } from '@prisma/client';
 
+function parsePositiveNumber(value: unknown): number | null {
+  if (
+    typeof value !== 'number' &&
+    (typeof value !== 'string' || value.trim().length === 0)
+  ) {
+    return null;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
 function requireAuth(request: NextRequest) {
   const token = getTokenFromRequest(request);
   if (!token) return null;
@@ -67,7 +78,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is banned
-    const ghsAmount = Number(amountGhs);
+    const ghsAmount = parsePositiveNumber(amountGhs);
+    const cryptoAmountNumber = parsePositiveNumber(cryptoAmount);
+    const cryptoRateGhsNumber = parsePositiveNumber(cryptoRateGhs);
+    const cryptoRateUsdNumber = cryptoRateUsd === null ? null : parsePositiveNumber(cryptoRateUsd);
+    if (ghsAmount === null || cryptoAmountNumber === null || cryptoRateGhsNumber === null || (cryptoRateUsd !== null && cryptoRateUsdNumber === null)) {
+      return NextResponse.json({ error: 'Amounts and exchange rates must be valid positive numbers.' }, { status: 400 });
+    }
+
     const userRecord = await prisma.user.findUnique({
       where: { id: user.userId },
       select: { kycVerified: true, isBanned: true },
@@ -115,9 +133,9 @@ export async function POST(request: NextRequest) {
         bundleLabel,
         amountGhs: ghsAmount,
         cryptoAsset,
-        cryptoAmount,
-        cryptoRateGhs: Number(cryptoRateGhs),
-        cryptoRateUsd: cryptoRateUsd ? Number(cryptoRateUsd) : null,
+        cryptoAmount: String(cryptoAmount),
+        cryptoRateGhs: cryptoRateGhsNumber,
+        cryptoRateUsd: cryptoRateUsdNumber,
         userWalletAddress,
         sellPayoutPhone,
         sellPayoutBank,

@@ -669,6 +669,10 @@ export default function BuyPage() {
               className="w-full border border-green-300 rounded-lg px-3 py-2 text-green-900 bg-white font-mono text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-green-500"
             />
 
+            <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-950">
+              A linked wallet is still an external wallet you control. Exspend does not currently hold crypto in an in-app wallet. Choose a linked address above or enter another compatible destination address.
+            </div>
+
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 text-sm text-yellow-800 mb-3 space-y-1">
               <p>⚠️ <strong>Binance Pay and Bybit Pay not supported</strong> for Buy orders — use on-chain addresses only.</p>
               <p>⚠️ Make sure the address is correct. We cannot recover funds sent to wrong addresses.</p>
