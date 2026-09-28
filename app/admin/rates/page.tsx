@@ -93,11 +93,11 @@ function RateSection() {
     <>
       {/* Buy / Sell specific rates */}
       <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-        <div className="px-6 py-4 border-b border-gray-100">
+        <div className="border-b border-gray-100 px-4 py-4 sm:px-6">
           <h2 className="text-lg font-semibold text-gray-800">💹 Buy &amp; Sell/Spend Rates (GHS per USD)</h2>
           <p className="text-xs text-gray-500 mt-0.5">These are the operative rates used across the app for all buy, sell, and spend orders.</p>
         </div>
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <form onSubmit={handleSaveBuySellRates} className="grid md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Buy Rate (GHS per USD)</label>
@@ -170,7 +170,7 @@ function CryptoPricesSection() {
 
   return (
     <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <div className="flex flex-col items-start gap-3 border-b border-gray-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
           <h2 className="text-lg font-semibold text-gray-800">📈 Live Crypto Prices</h2>
           <p className="text-xs text-gray-500 mt-0.5">Fetched live from CoinGecko · auto-refreshes every 60s</p>
@@ -183,9 +183,9 @@ function CryptoPricesSection() {
           {loading ? 'Loading…' : '↻ Refresh'}
         </button>
       </div>
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {prices ? (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
             {[
               { symbol: 'BTC', name: 'Bitcoin', price: prices.btcUsd },
               { symbol: 'BNB', name: 'BNB', price: prices.bnbUsd },
@@ -295,7 +295,7 @@ function BundlesSection() {
 
   return (
     <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-100">
+      <div className="border-b border-gray-100 px-4 py-4 sm:px-6">
         <h2 className="text-lg font-semibold text-gray-800">📦 Data Bundles Manager</h2>
       </div>
 
@@ -316,7 +316,7 @@ function BundlesSection() {
         ))}
       </div>
 
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Bundles table */}
         <div className="overflow-x-auto mb-6">
           <table className="w-full text-sm">
@@ -473,7 +473,7 @@ export default function AdminRatesPage() {
   }, [router]);
 
   return (
-    <div className="p-6 max-w-5xl">
+    <div className="max-w-5xl p-4 sm:p-6">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Rates & Bundles</h1>
       <RateSection />
       <CryptoPricesSection />

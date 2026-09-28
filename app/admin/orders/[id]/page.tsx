@@ -123,7 +123,7 @@ export default function AdminOrderDetailPage() {
     }
   }
 
-  if (loading) return <div className="p-6 text-gray-400">Loading order…</div>;
+  if (loading) return <div className="p-4 text-gray-400 sm:p-6">Loading order…</div>;
   if (error || !order) return (
     <div className="p-6">
       <p className="text-red-600 mb-3">{error}</p>
@@ -134,7 +134,7 @@ export default function AdminOrderDetailPage() {
   const isFinal = FINAL_STATUSES.includes(order.status);
 
   return (
-    <div className="p-6 max-w-4xl">
+    <div className="max-w-4xl p-4 sm:p-6">
       <div className="flex items-center gap-3 mb-6">
         <Link href="/admin/orders" className="text-green-700 hover:underline text-sm">← Orders</Link>
         <span className="text-gray-300">/</span>

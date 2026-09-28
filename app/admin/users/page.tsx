@@ -81,7 +81,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <h1 className="text-2xl font-bold text-gray-800 mb-2">Users Management</h1>
       <p className="text-sm text-gray-500 mb-6">
         {users.length} registered user{users.length !== 1 ? 's' : ''}
@@ -99,7 +99,7 @@ export default function AdminUsersPage() {
       {/* Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="min-w-[760px] w-full text-sm">
             <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
               <tr>
                 <th className="px-4 py-3 text-left">Name</th>

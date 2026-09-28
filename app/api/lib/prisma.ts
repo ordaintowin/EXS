@@ -12,7 +12,7 @@ const prismaClientSingleton = () => {
     connectionString: process.env.DATABASE_URL,
   });
   const adapter = new PrismaPg(pool);
-  return new PrismaClient({ adapter } as never);
+  return new PrismaClient({ adapter });
 };
 
 export const prisma: PrismaClient = global._prisma ?? prismaClientSingleton();

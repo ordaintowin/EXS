@@ -107,7 +107,7 @@ export default function AdminPaymentSettingsPage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl">
+    <div className="max-w-3xl p-4 sm:p-6">
       <h1 className="text-2xl font-bold text-gray-800 mb-2">Payment Method Settings</h1>
       <p className="text-gray-500 text-sm mb-6">
         Configure the payment details shown to users when they select a payment method on the Buy page.

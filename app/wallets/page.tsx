@@ -14,7 +14,10 @@ type Eip1193Provider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
   isMetaMask?: boolean;
   isTrust?: boolean;
+  isTrustWallet?: boolean;
   providers?: Eip1193Provider[];
+  on?: (event: string, listener: () => void) => void;
+  removeListener?: (event: string, listener: () => void) => void;
 };
 type EvmWalletApp = 'metamask' | 'trust' | 'other';
 type WalletApi = {
@@ -58,18 +61,36 @@ function getEvmProvider(app: EvmWalletApp): Eip1193Provider | undefined {
   const injected = window.ethereum;
   const candidates = [...(injected?.providers ?? []), ...(injected ? [injected] : [])];
   const providers = [...new Set(candidates)];
-  if (app === 'other') return injected;
+  if (app === 'other') {
+    return providers.find((provider) => !provider.isMetaMask && !provider.isTrust && !provider.isTrustWallet)
+      ?? providers[0];
+  }
 
   const selected = app === 'metamask'
     ? providers.find((provider) => provider.isMetaMask && !provider.isTrust)
-    : providers.find((provider) => provider.isTrust);
+    : providers.find((provider) => provider.isTrust || provider.isTrustWallet);
   if (selected) return selected;
   if (providers.length === 1) {
     const onlyProvider = providers[0];
     if (app === 'metamask' && onlyProvider.isMetaMask && !onlyProvider.isTrust) return onlyProvider;
-    if (app === 'trust' && onlyProvider.isTrust) return onlyProvider;
+    if (app === 'trust' && (onlyProvider.isTrust || onlyProvider.isTrustWallet)) return onlyProvider;
   }
   return undefined;
+}
+
+function isMobileBrowser() {
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
+function walletBrowserUrl(app: EvmWalletApp) {
+  const currentUrl = `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (app === 'metamask') {
+    return `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}${window.location.search}${window.location.hash}`;
+  }
+  if (app === 'trust') {
+    return `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(currentUrl)}`;
+  }
+  return currentUrl;
 }
 
 function authHeaders(): HeadersInit {
@@ -103,6 +124,8 @@ export default function WalletsPage() {
   const [unlinking, setUnlinking] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [providerReady, setProviderReady] = useState(false);
+  const [mobileBrowser, setMobileBrowser] = useState(false);
 
   const loadWallets = useCallback(async (showSpinner = true) => {
     if (showSpinner) setLoading(true);
@@ -148,6 +171,27 @@ export default function WalletsPage() {
     }
     setShowCreateWalletHelp(params.get('setup') === 'create');
   }, []);
+
+  useEffect(() => {
+    setMobileBrowser(isMobileBrowser());
+
+    const refreshProviderStatus = () => {
+      if (chain === 'ethereum' || chain === 'bsc' || chain === 'polygon') {
+        setProviderReady(Boolean(getEvmProvider(walletApp)));
+      } else {
+        setProviderReady(true);
+      }
+    };
+    const handleProviderInitialized = () => refreshProviderStatus();
+
+    refreshProviderStatus();
+    window.addEventListener('ethereum#initialized', handleProviderInitialized);
+    const poll = window.setInterval(refreshProviderStatus, 1000);
+    return () => {
+      window.removeEventListener('ethereum#initialized', handleProviderInitialized);
+      window.clearInterval(poll);
+    };
+  }, [chain, walletApp]);
 
   async function createChallenge(address: string) {
     const response = await fetch('/api/wallets/challenge', {
@@ -195,10 +239,30 @@ export default function WalletsPage() {
 
         const currentChain = await provider.request({ method: 'eth_chainId' }) as string;
         if (currentChain.toLowerCase() !== config.chainId) {
-          await provider.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: config.chainId }],
-          });
+          try {
+            await provider.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: config.chainId }],
+            });
+          } catch (switchError) {
+            if (typeof switchError !== 'object' || switchError === null || !('code' in switchError) || switchError.code !== 4902) {
+              throw switchError;
+            }
+            await provider.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: config.chainId,
+                chainName: config.label,
+                nativeCurrency: {
+                  name: config.currency,
+                  symbol: config.currency,
+                  decimals: 18,
+                },
+                rpcUrls: [config.rpcUrl],
+                blockExplorerUrls: [config.explorer],
+              }],
+            });
+          }
         }
         await verifyAndSave(address, async (message) => (
           await provider.request({ method: 'personal_sign', params: [message, address] })
@@ -226,6 +290,11 @@ export default function WalletsPage() {
     }
   }
 
+  function openWalletBrowser() {
+    if (walletApp === 'other') return;
+    window.location.assign(walletBrowserUrl(walletApp));
+  }
+
   async function unlinkWallet(wallet: LinkedWallet) {
     if (!window.confirm(`Unlink this ${CHAIN_LABELS[wallet.chain]} wallet?`)) return;
     setUnlinking(wallet.id);
@@ -249,8 +318,6 @@ export default function WalletsPage() {
       setUnlinking(null);
     }
   }
-
-  const chainAlreadyLinked = wallets.some((wallet) => wallet.chain === chain);
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -318,16 +385,36 @@ export default function WalletsPage() {
             <button
               type="button"
               onClick={connectWallet}
-              disabled={connecting || chainAlreadyLinked}
+               disabled={connecting}
               className="self-end rounded-xl bg-green-800 px-5 py-3 text-sm font-semibold text-white hover:bg-green-900 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {connecting ? <span className="flex items-center gap-2"><LoaderCircle size={16} className="animate-spin" /> Connecting…</span> : chainAlreadyLinked ? 'Network already linked' : `Connect ${CHAIN_LABELS[chain]}`}
+               {connecting ? <span className="flex items-center gap-2"><LoaderCircle size={16} className="animate-spin" /> Connecting…</span> : `Connect another ${CHAIN_LABELS[chain]} wallet`}
             </button>
           </div>
           <p className="mt-3 text-xs text-gray-500">
-            MetaMask, Trust Wallet, and compatible wallet apps work with Ethereum, BNB Chain, and Polygon. Use TronLink for Tron or UniSat for Bitcoin. On mobile, open this page inside the wallet app’s browser.
+            MetaMask, Trust Wallet, and compatible wallet apps work with Ethereum, BNB Chain, and Polygon. Use TronLink for Tron or UniSat for Bitcoin. Desktop extensions are detected automatically; on mobile, open this page inside the wallet app’s browser.
             You can also skip linking and enter a destination address when buying.
           </p>
+
+          {(walletApp === 'metamask' || walletApp === 'trust') && !providerReady && (
+            <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
+              <p className="font-semibold">
+                {mobileBrowser ? `${walletApp === 'metamask' ? 'MetaMask' : 'Trust Wallet'} is installed but this tab is outside its browser.` : `No ${walletApp === 'metamask' ? 'MetaMask' : 'Trust Wallet'} provider is available in this tab.`}
+              </p>
+              <p className="mt-1 text-xs">
+                {mobileBrowser
+                  ? 'Use the button below to reopen this exact page inside the selected wallet. The wallet provider can only be detected there.'
+                  : 'Install the official extension, or open this page in the selected wallet app on iOS or Android.'}
+              </p>
+              <button
+                type="button"
+                onClick={openWalletBrowser}
+                className="mt-3 rounded-lg bg-blue-700 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-800"
+              >
+                Open in {walletApp === 'metamask' ? 'MetaMask' : 'Trust Wallet'}
+              </button>
+            </div>
+          )}
 
           {error && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
           {notice && <p role="status" className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-800">{notice}</p>}

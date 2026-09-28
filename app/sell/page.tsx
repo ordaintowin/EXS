@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { getToken } from '@/app/lib/auth';
 import { getLiveCryptoPriceText } from '@/app/lib/crypto';
 import BanModal from '@/app/components/BanModal';
+import WalletFundingSelector from '@/app/components/WalletFundingSelector';
 
 const ASSETS = ['BTC', 'BNB', 'ETH', 'USDT (TRC-20)', 'USDT (BEP-20)', 'USDC (BEP-20)', 'USDT (Polygon)', 'USDC (Polygon)', 'Binance Pay', 'Bybit Pay'];
 
@@ -156,10 +157,6 @@ export default function SellPage() {
   const cryptoRateUsd = asset === 'BTC' ? btcUsd : asset === 'BNB' ? bnbUsd : asset === 'ETH' ? ethUsd : 1;
   const settingsKey = assetToSettingsKey(asset);
   const receiveWallet = walletAddresses[settingsKey] ?? '';
-  const matchingLinkedWallets = linkedWallets.filter(
-    (wallet) => wallet.chain === walletChainForAsset(asset),
-  );
-
   const rateInfo = loadingRates
     ? 'Loading rates…'
     : (() => {
@@ -230,6 +227,7 @@ export default function SellPage() {
         setError(data.error || 'Failed to create order'); return;
       }
       setOrderId(data.order.id);
+      if (typeof window !== 'undefined') localStorage.removeItem('exspend_wallet_source');
       setStep(4);
     } catch {
       setError('Network error. Please try again.');
@@ -379,29 +377,13 @@ export default function SellPage() {
 
             <p className="text-green-600 text-xs mb-5">Minimum: equivalent of GHS 150</p>
 
-            {walletChainForAsset(asset) && (
-              <div className="mb-5">
-                <label className="block text-green-900 font-semibold mb-1 text-sm">
-                  Wallet you’ll send from <span className="font-normal text-green-600">(optional)</span>
-                </label>
-                {matchingLinkedWallets.length > 0 ? (
-                  <select
-                    value={sendingWalletAddress}
-                    onChange={(e) => setSendingWalletAddress(e.target.value)}
-                    className="w-full border border-green-300 rounded-lg px-3 py-2 text-green-900 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    <option value="">Choose later</option>
-                    {matchingLinkedWallets.map((wallet) => (
-                      <option key={wallet.id} value={wallet.address}>{wallet.address}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <p className="text-green-700 text-xs">
-                    <a href="/wallets" className="underline font-semibold">Link a wallet</a> to include its verified address with your order.
-                  </p>
-                )}
-              </div>
-            )}
+            <WalletFundingSelector
+              asset={settingsKey}
+              amountGhs={finalGhsAmount}
+              cryptoAmount={finalCryptoAmount}
+              value={sendingWalletAddress}
+              onChange={setSendingWalletAddress}
+            />
 
             <button
               onClick={handleStep1Continue}

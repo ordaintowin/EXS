@@ -118,7 +118,7 @@ export default function AdminHistoryPage() {
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <div className="mb-5">
         <h1 className="text-2xl font-bold text-gray-800">Activity History</h1>
         <p className="mt-1 text-sm text-gray-500">

@@ -109,7 +109,7 @@ export default function AdminWalletsPage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl">
+    <div className="max-w-2xl p-4 sm:p-6">
       <h1 className="text-2xl font-bold text-gray-800 mb-1">Wallet Settings</h1>
       <p className="text-sm text-gray-500 mb-6">
         Manage wallet addresses shown to users when they buy crypto.

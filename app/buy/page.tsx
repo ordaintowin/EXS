@@ -624,8 +624,8 @@ export default function BuyPage() {
         {/* STEP 2 */}
         {step === 2 && (
           <div className="bg-green-50 rounded-2xl p-6 md:p-8 shadow-lg">
-            <h1 className="text-green-900 font-bold text-2xl mb-1">Wallet Address</h1>
-            <p className="text-green-600 text-sm mb-5">Enter your {asset} wallet address to receive crypto</p>
+            <h1 className="text-green-900 font-bold text-2xl mb-1">Where should we load your crypto?</h1>
+            <p className="text-green-600 text-sm mb-5">Choose a linked wallet or load an external {asset} wallet address</p>
 
             {walletError && <p className="bg-red-100 text-red-700 rounded-lg px-4 py-2 text-sm mb-4">{walletError}</p>}
 

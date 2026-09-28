@@ -8,6 +8,7 @@ import { createOrder } from '@/app/lib/orders-api';
 import { getToken } from '@/app/lib/auth';
 import DailyQuotaDisplay from '@/app/components/DailyQuotaDisplay';
 import BanModal from '@/app/components/BanModal';
+import WalletFundingSelector from '@/app/components/WalletFundingSelector';
 
 const TELECEL_PREFIXES = ['020', '050'];
 
@@ -220,6 +221,7 @@ export default function TelecelDataPage() {
         </div>
 
         {/* Live Calculation */}
+        <WalletFundingSelector asset={crypto} amountGhs={selectedBundle?.priceGhs ?? 0} cryptoAmount={cryptoAmount} />
         <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-4 text-sm flex flex-col gap-1 text-green-900">
           {selectedBundle ? (
             <>

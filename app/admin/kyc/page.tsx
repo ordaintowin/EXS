@@ -71,7 +71,7 @@ export default function AdminKycPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <h1 className="text-2xl font-bold text-gray-800 mb-2">KYC Submissions</h1>
       <p className="text-sm text-gray-500 mb-6">
         {entries.length} submission{entries.length !== 1 ? 's' : ''}

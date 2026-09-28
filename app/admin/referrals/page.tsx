@@ -100,8 +100,8 @@ export default function AdminReferralsPage() {
   );
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-5xl p-4 sm:mx-auto sm:p-6">
+      <div className="mb-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-green-900 text-2xl font-bold">Referral Rewards</h1>
         <select
           value={filter}

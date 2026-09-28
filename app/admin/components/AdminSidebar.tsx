@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, ClipboardList, Users, RefreshCw, ArrowLeft, ShieldCheck, Wallet, CreditCard, Gift, History } from 'lucide-react';
 import AdminNotificationBell from '@/app/components/AdminNotificationBell';
 
@@ -19,6 +19,7 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <>
@@ -58,35 +59,29 @@ export default function AdminSidebar() {
       </aside>
 
       {/* Mobile top tab nav */}
-      <div className="md:hidden bg-green-900 text-white">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-green-800">
-          <span className="text-lg font-bold">⚡ Exspend Admin</span>
+      <div className="w-full bg-green-900 text-white md:hidden">
+        <div className="flex items-center justify-between gap-3 border-b border-green-800 px-4 py-3">
+          <span className="min-w-0 truncate text-base font-bold">⚡ Exspend Admin</span>
           <div className="flex items-center gap-2">
-            <AdminNotificationBell />
+            <AdminNotificationBell compact />
             <Link href="/spend" className="flex items-center gap-1 text-xs text-lime-400 hover:text-lime-300">
               <ArrowLeft size={14} />
               Back
             </Link>
           </div>
         </div>
-        <div className="flex overflow-x-auto gap-1 px-3 py-2">
-          {navItems.map(({ icon: Icon, label, href }) => {
-            const active = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                  active
-                    ? 'bg-green-700 text-lime-400'
-                    : 'text-white hover:bg-green-800'
-                }`}
-              >
-                <Icon size={14} />
-                {label}
-              </Link>
-            );
-          })}
+        <div className="px-4 py-3">
+          <label htmlFor="admin-section" className="sr-only">Admin section</label>
+          <select
+            id="admin-section"
+            value={navItems.find(({ href }) => pathname === href || pathname.startsWith(href + '/'))?.href ?? '/admin'}
+            onChange={(event) => router.push(event.target.value)}
+            className="w-full rounded-xl border border-green-700 bg-green-800 px-3 py-2.5 text-sm font-medium text-white outline-none focus:border-lime-300 focus:ring-2 focus:ring-lime-300/30"
+          >
+            {navItems.map(({ label, href }) => (
+              <option key={href} value={href}>{label}</option>
+            ))}
+          </select>
         </div>
       </div>
     </>

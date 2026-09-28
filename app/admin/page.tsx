@@ -78,24 +78,24 @@ export default function AdminDashboardPage() {
   }, [router]);
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <h1 className="text-2xl font-bold text-gray-800 mb-1">Dashboard Overview</h1>
       <p className="text-sm text-gray-500 mb-6">Welcome back, Admin ⚡</p>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
           <p className="text-sm text-gray-500 mb-1">Total Users</p>
-          <p className="text-3xl font-bold text-gray-800">
+          <p className="text-2xl font-bold text-gray-800 sm:text-3xl">
             {loading ? '…' : userCount ?? '—'}
           </p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
           <p className="text-sm text-gray-500 mb-1">Current GHS/USD Rate</p>
-          <p className="text-3xl font-bold text-green-700">
+          <p className="text-2xl font-bold text-green-700 sm:text-3xl">
             {loading ? '…' : latestRate ? `GHS ${latestRate.ghsPerUsd.toFixed(2)}` : '—'}
           </p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
           <p className="text-sm text-gray-500 mb-1">Rate Last Set By</p>
           <p className="text-sm font-semibold text-gray-800 mt-2 truncate">
             {loading ? '…' : latestRate ? latestRate.setByAdmin : '—'}
@@ -106,21 +106,21 @@ export default function AdminDashboardPage() {
             </p>
           )}
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
           <p className="text-sm text-gray-500 mb-1">Total Orders</p>
-          <p className="text-3xl font-bold text-gray-800">
+          <p className="text-2xl font-bold text-gray-800 sm:text-3xl">
             {loading ? '…' : orderStats?.total ?? '—'}
           </p>
         </div>
-        <div className="bg-yellow-50 rounded-xl shadow-sm p-5 border border-yellow-100">
+        <div className="rounded-xl border border-yellow-100 bg-yellow-50 p-4 shadow-sm sm:p-5">
           <p className="text-sm text-yellow-700 mb-1">Pending Orders</p>
-          <p className="text-3xl font-bold text-yellow-600">
+          <p className="text-2xl font-bold text-yellow-600 sm:text-3xl">
             {loading ? '…' : orderStats?.pending ?? '—'}
           </p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5">
           <p className="text-sm text-gray-500 mb-1">Total GHS Volume</p>
-          <p className="text-3xl font-bold text-green-700">
+          <p className="text-2xl font-bold text-green-700 sm:text-3xl">
             {loading ? '…' : orderStats ? `GHS ${orderStats.volumeGhs.toFixed(0)}` : '—'}
           </p>
         </div>
@@ -132,7 +132,7 @@ export default function AdminDashboardPage() {
           <Link
             key={href}
             href={href}
-            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-start gap-4 hover:border-green-300 hover:shadow-md transition-all group"
+            className="flex items-start gap-4 rounded-xl border border-gray-100 bg-white p-4 shadow-sm transition-all group hover:border-green-300 hover:shadow-md sm:p-5"
           >
             <span className="text-3xl">{emoji}</span>
             <div>

@@ -13,7 +13,7 @@ import {
 
 const BROWSER_ALERTS_KEY = 'exspend_admin_browser_alerts';
 
-export default function AdminNotificationBell() {
+export default function AdminNotificationBell({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
   const [open, setOpen] = useState(false);
@@ -149,20 +149,27 @@ export default function AdminNotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-white hover:bg-green-800 hover:text-lime-400 transition-colors relative w-full"
+        className={compact
+          ? 'relative flex h-10 w-10 items-center justify-center rounded-xl border border-green-700 text-white transition-colors hover:bg-green-800 hover:text-lime-400'
+          : 'relative flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-green-800 hover:text-lime-400'}
         aria-label="Notifications"
+        aria-expanded={open}
       >
         <Bell size={18} />
-        <span>Notifications</span>
+        {!compact && <span>Notifications</span>}
         {unreadCount > 0 && (
-          <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+          <span className={compact
+            ? 'absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-green-900 bg-lime-300 px-1 text-[10px] font-bold text-green-950'
+            : 'ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white'}>
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute left-full top-0 ml-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+        <div className={compact
+          ? 'fixed right-3 top-[7.25rem] z-[60] w-[min(22rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl'
+          : 'absolute left-full top-0 z-50 ml-2 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl'}>
           <div className="px-4 py-3 border-b border-gray-100 bg-green-900">
             <span className="text-sm font-semibold text-white">Notifications</span>
             {unreadCount > 0 && (

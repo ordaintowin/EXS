@@ -22,6 +22,7 @@ type ApiOrder = {
   updatedAt?: string;
   recipient?: string | null;
   recipientName?: string | null;
+  userWalletAddress?: string | null;
   paymentMethod?: string | null;
   paymentBankName?: string | null;
   paymentBankAcct?: string | null;
@@ -305,6 +306,9 @@ export default function OrderDetailPage() {
           )}
           {order.recipientName && (
             <DetailRow label="Name" value={order.recipientName} />
+          )}
+          {order.userWalletAddress && (
+            <DetailRow label={order.orderType === 'buy' ? 'Crypto destination' : 'Debit source'} value={<span className="break-all font-mono text-xs">{order.userWalletAddress}</span>} />
           )}
           <DetailRow label="Created" value={formatDate(order.createdAt)} />
         </div>

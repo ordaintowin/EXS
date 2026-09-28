@@ -1,160 +1,154 @@
-import Link from 'next/link'
+import Link from 'next/link';
+import {
+  ArrowRight,
+  Banknote,
+  Check,
+  CircleHelp,
+  LockKeyhole,
+  MoveRight,
+  ShieldCheck,
+  Smartphone,
+  WalletCards,
+} from 'lucide-react';
+import WalletIllustration from '@/app/components/WalletIllustration';
+
+const services = [
+  { icon: Smartphone, label: 'Spend crypto', text: 'Turn crypto into airtime, data, MoMo and bank payments.' },
+  { icon: Banknote, label: 'Buy crypto', text: 'Purchase popular assets with a clear GHS quote and delivery address.' },
+  { icon: MoveRight, label: 'Sell crypto', text: 'Send crypto and receive Ghana cedis through your preferred payout method.' },
+];
+
+const principles = [
+  'You keep control of your non-custodial wallet',
+  'We never ask for a recovery phrase or private key',
+  'Every order shows the asset, amount and rate before you confirm',
+];
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen bg-white text-black overflow-hidden">
-      {/* Background Crypto Pattern */}
-      <div className="pointer-events-none absolute inset-0 z-0 opacity-10">
-        <div className="absolute top-20 left-10 text-7xl text-green-900 animate-pulse">₿</div>
-        <div className="absolute bottom-20 right-20 text-7xl text-green-700 animate-bounce">Ξ</div>
-        <div className="absolute top-1/2 left-1/3 text-6xl text-lime-500 animate-ping">◎</div>
-        <div className="absolute top-10 right-1/4 text-5xl text-green-800">₿</div>
-        <div className="absolute bottom-10 left-1/4 text-5xl text-lime-400">Ξ</div>
-      </div>
+    <main className="-mx-4 -mt-8 overflow-hidden bg-[#f5f8f3] text-slate-900">
+      <section className="relative overflow-hidden bg-green-950 px-4 pb-20 pt-14 text-white sm:px-6 sm:pb-28 sm:pt-20">
+        <div className="absolute -right-32 -top-36 h-[30rem] w-[30rem] rounded-full bg-lime-300/15 blur-3xl" />
+        <div className="absolute -bottom-48 left-[35%] h-[34rem] w-[34rem] rounded-full bg-emerald-400/15 blur-3xl" />
+        <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'linear-gradient(rgba(190,242,100,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(190,242,100,0.4) 1px, transparent 1px)', backgroundSize: '54px 54px' }} />
 
-      {/* Content */}
-      <div className="relative z-10">
-
-        {/* Hero */}
-        <section className="bg-gradient-to-br from-green-800 via-green-700 to-lime-500 text-white px-6 py-20 text-center">
-          <div className="max-w-3xl mx-auto">
-            <div className="flex justify-center mb-6">
-              <span className="text-5xl font-extrabold">
-                 <span className="text-lime-400">Ex</span><span className="text-white">spend</span>
-              </span>
-            </div>
-            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
-              Pay in Ghana Cedis with Crypto
-            </h1>
-            <p className="text-lg md:text-xl text-green-100 mb-8">
-              Ghana&apos;s fastest way to convert crypto to GHS — airtime, data, MoMo and bank transfers.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/signup"
-                className="bg-lime-400 hover:bg-lime-300 text-green-900 font-bold px-8 py-4 rounded-2xl text-lg transition-colors shadow-lg"
-              >
-                Get Started →
-              </Link>
-              <Link
-                href="/login"
-                className="bg-white/20 hover:bg-white/30 text-white font-bold px-8 py-4 rounded-2xl text-lg transition-colors border border-white/40"
-              >
-                Sign In
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* Features */}
-        <section className="py-16 px-6 bg-green-50">
-          <div className="max-w-4xl mx-auto text-center mb-10">
-            <h2 className="text-3xl font-bold text-green-900 mb-2">What You Can Do</h2>
-            <p className="text-gray-500">Fast, secure, and reliable crypto-to-GHS services</p>
-          </div>
-          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-2xl shadow-sm p-6 text-center border border-green-100">
-              <div className="text-4xl mb-3">💳</div>
-              <h3 className="text-xl font-bold text-green-900 mb-2">Spend Crypto</h3>
-              <p className="text-gray-500 text-sm">
-                Pay for airtime, data bundles, mobile money transfers and bank transfers using your crypto.
-              </p>
-            </div>
-            <div className="bg-white rounded-2xl shadow-sm p-6 text-center border border-green-100">
-              <div className="text-4xl mb-3">📈</div>
-              <h3 className="text-xl font-bold text-green-900 mb-2">Buy Crypto</h3>
-              <p className="text-gray-500 text-sm">
-                Buy BTC, ETH, BNB, USDT and USDC with Ghana Cedis via MoMo or bank transfer.
-              </p>
-            </div>
-            <div className="bg-white rounded-2xl shadow-sm p-6 text-center border border-green-100">
-              <div className="text-4xl mb-3">📉</div>
-              <h3 className="text-xl font-bold text-green-900 mb-2">Sell Crypto</h3>
-              <p className="text-gray-500 text-sm">
-                Sell your crypto and receive Ghana Cedis directly to your MoMo or bank account.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* How it Works */}
-        <section className="py-16 px-6 bg-white">
-          <div className="max-w-4xl mx-auto text-center mb-10">
-            <h2 className="text-3xl font-bold text-green-900 mb-2">How It Works</h2>
-            <p className="text-gray-500">Simple 3-step process</p>
-          </div>
-          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { step: '1', icon: '👤', title: 'Create Account', desc: 'Sign up for free in less than 2 minutes. No complicated forms.' },
-              { step: '2', icon: '📋', title: 'Place Order', desc: 'Select your service, enter the amount, and confirm your order.' },
-              { step: '3', icon: '✅', title: 'Get Paid', desc: 'Receive your crypto or GHS within minutes — fast and reliable.' },
-            ].map(({ step, icon, title, desc }) => (
-              <div key={step} className="text-center">
-                <div className="w-14 h-14 bg-green-700 text-white rounded-full text-2xl font-bold flex items-center justify-center mx-auto mb-3">
-                  {icon}
-                </div>
-                <div className="text-xs font-bold text-green-600 uppercase tracking-widest mb-1">Step {step}</div>
-                <h3 className="text-lg font-bold text-gray-800 mb-1">{title}</h3>
-                <p className="text-gray-500 text-sm">{desc}</p>
+        <div className="relative mx-auto max-w-6xl">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.08fr_0.92fr]">
+            <div>
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-lime-300/25 bg-white/10 px-3 py-1.5 text-xs font-semibold text-lime-200 backdrop-blur">
+                <span className="h-1.5 w-1.5 rounded-full bg-lime-300" />
+                Crypto payments, made understandable
               </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Testimonials */}
-        <section className="py-16 px-6 bg-green-50">
-          <div className="max-w-4xl mx-auto text-center mb-10">
-            <h2 className="text-3xl font-bold text-green-900 mb-2">What Our Customers Say</h2>
-          </div>
-          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { name: 'Kofi Mensah', text: 'Exspend made it so easy to convert my USDT to airtime. The process was smooth and fast!', stars: 5 },
-              { name: 'Ama Owusu', text: 'I love how quickly I receive my MoMo payment when I sell crypto. Best platform in Ghana!', stars: 5 },
-              { name: 'Kwame Asante', text: 'Been using Exspend for 6 months. Reliable, fast and the customer support is excellent.', stars: 5 },
-            ].map(({ name, text, stars }) => (
-              <div key={name} className="bg-white rounded-2xl shadow-sm p-6 border border-green-100">
-                <div className="text-yellow-400 text-lg mb-2">{'⭐'.repeat(stars)}</div>
-                <p className="text-gray-600 text-sm mb-4 italic">&ldquo;{text}&rdquo;</p>
-                <p className="text-green-900 font-bold text-sm">— {name}</p>
+              <h1 className="max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl">
+                Move between crypto and Ghana cedis with confidence.
+              </h1>
+              <p className="mt-6 max-w-2xl text-base leading-7 text-green-100 sm:text-lg">
+                Exspend helps you spend, buy and sell crypto for the things you need in Ghana. Clear rates, familiar payments and wallet education built into the experience.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href="/signup" className="inline-flex items-center gap-2 rounded-xl bg-lime-300 px-5 py-3.5 text-sm font-bold text-green-950 transition-colors hover:bg-lime-200">
+                  Get started <ArrowRight size={17} />
+                </Link>
+                <Link href="/learn-wallets" className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-5 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/10">
+                  Understand wallets
+                </Link>
               </div>
-            ))}
+              <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs text-green-200">
+                <span className="inline-flex items-center gap-2"><ShieldCheck size={15} className="text-lime-300" /> Non-custodial friendly</span>
+                <span className="inline-flex items-center gap-2"><LockKeyhole size={15} className="text-lime-300" /> No seed phrases</span>
+              </div>
+            </div>
+            <WalletIllustration variant="connect" />
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* About */}
-        <section className="py-16 px-6 bg-green-800 text-white text-center">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold mb-4">Ghana&apos;s #1 Crypto-to-GHS Gateway</h2>
-            <p className="text-green-100 mb-6">
-              Exspend is trusted by thousands of Ghanaians to convert crypto to local payments instantly.
-              Safe, transparent, and always available.
+      <section className="relative z-10 mx-auto -mt-8 max-w-6xl px-4 sm:px-6">
+        <div className="grid gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_18px_50px_rgba(15,23,42,0.1)] sm:grid-cols-3 sm:p-5">
+          {services.map(({ icon: Icon, label, text }) => (
+            <div key={label} className="flex gap-3 rounded-2xl p-3 transition-colors hover:bg-green-50">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-100 text-green-800"><Icon size={19} /></div>
+              <div><h2 className="text-sm font-semibold text-slate-950">{label}</h2><p className="mt-1 text-xs leading-5 text-slate-500">{text}</p></div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
+        <div className="grid items-center gap-12 lg:grid-cols-[0.85fr_1.15fr]">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-green-700">Start with the basics</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Custodial or non-custodial? Know the difference.</h2>
+            <p className="mt-5 text-base leading-7 text-slate-600">
+              A custodial wallet is managed by a platform. A non-custodial wallet is controlled by you. Neither is automatically right or wrong—the important thing is knowing who holds the keys.
             </p>
-            <Link
-              href="/signup"
-              className="inline-block bg-lime-400 hover:bg-lime-300 text-green-900 font-bold px-8 py-4 rounded-2xl text-lg transition-colors"
-            >
-              Create Free Account →
+            <Link href="/learn-wallets" className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-green-800 hover:text-green-950">
+              Read the wallet guide <ArrowRight size={16} />
             </Link>
           </div>
-        </section>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <WalletIllustration variant="custodial" compact />
+            <WalletIllustration variant="noncustodial" compact />
+          </div>
+        </div>
+      </section>
 
-        {/* Footer */}
-        <footer className="bg-green-900 text-green-200 text-sm py-8 px-6 text-center">
-          <p className="mb-2">© 2026 Exspend. Ghana&apos;s Crypto-to-GHS Gateway.</p>
-          <p>
-            Questions?{' '}
-            <a
-              href="https://wa.me/233571827900"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-lime-400 hover:text-lime-300 font-semibold"
-            >
-              WhatsApp us: +233 57 182 7900
-            </a>
-          </p>
-        </footer>
+      <section className="bg-white px-4 py-20 sm:px-6 sm:py-24">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="order-2 rounded-[2rem] bg-green-950 p-6 text-white shadow-xl sm:p-8 lg:order-1">
+            <div className="flex items-center gap-2 text-lime-300"><WalletCards size={18} /><span className="text-xs font-bold uppercase tracking-[0.2em]">A calmer way to transact</span></div>
+            <div className="mt-7 space-y-5">
+              {principles.map((principle) => (
+                <div key={principle} className="flex gap-3 text-sm leading-6 text-green-100">
+                  <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-lime-300 text-green-950"><Check size={13} strokeWidth={3} /></span>
+                  <span>{principle}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 border-t border-white/10 pt-5 text-xs leading-5 text-green-200">
+              Exspend does not currently hold crypto in an in-app wallet. Linked wallets remain external wallets you control.
+            </div>
+          </div>
+          <div className="order-1 lg:order-2">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-green-700">How it works</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Clear from the first click to the final confirmation.</h2>
+            <div className="mt-7 space-y-5">
+              {[
+                ['01', 'Choose a service', 'Spend, buy or sell using the flow that matches your goal.'],
+                ['02', 'Review the quote', 'See the crypto amount, GHS value and destination before continuing.'],
+                ['03', 'Confirm with your wallet', 'Use your external wallet or destination address and keep control of the final transaction.'],
+              ].map(([number, title, text]) => (
+                <div key={number} className="flex gap-4">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-green-100 text-xs font-bold text-green-800">{number}</span>
+                  <div><h3 className="font-semibold text-slate-950">{title}</h3><p className="mt-1 text-sm leading-6 text-slate-600">{text}</p></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
-      </div>
+      <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24">
+        <div className="rounded-[2rem] bg-gradient-to-br from-lime-200 via-lime-100 to-white p-7 sm:p-10">
+          <div className="grid items-center gap-8 md:grid-cols-[1fr_auto]">
+            <div>
+              <div className="flex items-center gap-2 text-green-800"><CircleHelp size={18} /><span className="text-xs font-bold uppercase tracking-[0.2em]">New to crypto?</span></div>
+              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-green-950 sm:text-3xl">Learn first. Move with confidence.</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-green-900/70">Our wallet guide explains custody, connection, signatures and the safety checks that protect your account.</p>
+            </div>
+            <Link href="/learn-wallets" className="inline-flex items-center justify-center gap-2 rounded-xl bg-green-900 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-green-800">
+              Explore the guide <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer className="bg-green-950 px-4 py-10 text-green-200 sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-5 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <div><p className="font-semibold text-white">Exspend</p><p className="mt-1 text-xs text-green-300/70">Crypto-to-GHS services for everyday life in Ghana.</p></div>
+          <div className="flex flex-wrap gap-5 text-xs font-medium"><Link href="/learn-wallets" className="hover:text-lime-300">Wallet guide</Link><Link href="/policies" className="hover:text-lime-300">Policies</Link><a href="https://wa.me/233571827900" target="_blank" rel="noopener noreferrer" className="hover:text-lime-300">WhatsApp support</a></div>
+        </div>
+      </footer>
     </main>
-  )
+  );
 }

@@ -149,24 +149,28 @@ export default function NotificationBell() {
   }
 
   return (
-    <div className="relative flex flex-col items-center" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors text-xs font-medium text-white hover:text-lime-400 hover:bg-green-800 relative"
+        className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-green-100 transition-colors hover:border-lime-300/40 hover:bg-white/10 hover:text-lime-200"
         aria-label="Notifications"
+        aria-expanded={open}
       >
-        <Bell size={20} />
+        <Bell size={18} strokeWidth={1.8} />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+          <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-green-950 bg-lime-300 px-1 text-[10px] font-bold text-green-950 shadow-sm">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
-        <span>Alerts</span>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100 bg-green-900 flex items-center justify-between">
+        <div
+          role="dialog"
+          aria-label="Notifications"
+          className="fixed right-4 top-[4.75rem] z-50 w-[min(24rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.2)]"
+        >
+          <div className="flex items-center justify-between border-b border-gray-100 bg-green-950 px-4 py-3">
             <div>
               <span className="text-sm font-semibold text-white">Notifications</span>
               {unreadCount > 0 && (

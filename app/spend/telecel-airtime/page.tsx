@@ -8,6 +8,7 @@ import { createOrder } from '@/app/lib/orders-api';
 import { getToken } from '@/app/lib/auth';
 import DailyQuotaDisplay from '@/app/components/DailyQuotaDisplay';
 import BanModal from '@/app/components/BanModal';
+import WalletFundingSelector from '@/app/components/WalletFundingSelector';
 
 const AIRTIME_CRYPTO_OPTIONS = [
   { label: 'Binance Pay', value: 'BINANCE_PAY' },
@@ -224,6 +225,7 @@ export default function TelecelAirtimePage() {
         </div>
 
         {/* Live Calculation */}
+        <WalletFundingSelector asset={crypto} amountGhs={amountNum} cryptoAmount={cryptoAmount} />
         <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-4 text-sm flex flex-col gap-1 text-green-900">
           <p>
             You will pay: <strong>{cryptoAmount} {cryptoLabel}</strong>

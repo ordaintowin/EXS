@@ -259,7 +259,7 @@ export default function AdminHelpPage() {
   const paginated = filtered.slice(pageStart, pageStart + TICKETS_PER_PAGE);
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">🎧 Help Tickets</h1>

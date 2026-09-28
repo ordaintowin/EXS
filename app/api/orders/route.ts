@@ -4,7 +4,7 @@ import { prisma } from '@/app/api/lib/prisma';
 import { sendEmail } from '@/app/api/lib/email';
 import { orderConfirmationEmail, adminNewOrderEmail } from '@/app/api/lib/email-templates';
 import { DEFAULT_WALLET_ADDRESSES } from '@/app/lib/crypto';
-import { OrderType, ServiceType } from '@prisma/client';
+import { OrderType, ServiceType, WalletChain } from '@prisma/client';
 
 function parsePositiveNumber(value: unknown): number | null {
   if (
@@ -15,6 +15,15 @@ function parsePositiveNumber(value: unknown): number | null {
   }
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function walletChainForAsset(asset: string): WalletChain | null {
+  if (asset === 'BTC') return WalletChain.bitcoin;
+  if (asset === 'USDT_TRC20') return WalletChain.tron;
+  if (asset === 'USDT_BEP20' || asset === 'USDC_BEP20' || asset === 'BNB') return WalletChain.bsc;
+  if (asset === 'USDT_POLYGON' || asset === 'USDC_POLYGON') return WalletChain.polygon;
+  if (asset === 'ETH') return WalletChain.ethereum;
+  return null;
 }
 
 function requireAuth(request: NextRequest) {
@@ -84,6 +93,20 @@ export async function POST(request: NextRequest) {
     const cryptoRateUsdNumber = cryptoRateUsd === null ? null : parsePositiveNumber(cryptoRateUsd);
     if (ghsAmount === null || cryptoAmountNumber === null || cryptoRateGhsNumber === null || (cryptoRateUsd !== null && cryptoRateUsdNumber === null)) {
       return NextResponse.json({ error: 'Amounts and exchange rates must be valid positive numbers.' }, { status: 400 });
+    }
+
+    if (typeof userWalletAddress === 'string' && userWalletAddress.trim() && (orderType === 'spend' || orderType === 'sell')) {
+      const linkedWallet = await prisma.linkedWallet.findFirst({
+        where: { userId: user.userId, address: userWalletAddress.trim() },
+        select: { id: true, chain: true },
+      });
+      if (!linkedWallet) {
+        return NextResponse.json({ error: 'Select one of your verified linked wallets as the debit source.' }, { status: 400 });
+      }
+      const expectedChain = walletChainForAsset(String(cryptoAsset));
+      if (expectedChain && linkedWallet.chain !== expectedChain) {
+        return NextResponse.json({ error: 'The selected source wallet is on the wrong network for this asset.' }, { status: 400 });
+      }
     }
 
     const userRecord = await prisma.user.findUnique({

@@ -82,6 +82,9 @@ export async function createOrder(
     amountGhs: orderData.amountGhs ?? orderData.amount ?? 0,
     cryptoAsset: orderData.cryptoAsset ?? orderData.crypto ?? '',
     orderType: orderData.orderType ?? 'spend',
+    ...(typeof window !== 'undefined' && (orderData.orderType ?? 'spend') === 'spend'
+      ? { userWalletAddress: localStorage.getItem('exspend_wallet_source') || orderData.userWalletAddress }
+      : {}),
   };
 
   try {
@@ -101,7 +104,11 @@ export async function createOrder(
       return null;
     }
     const data = await res.json();
-    return data.order || null;
+    const order = data.order || null;
+    if (order && typeof window !== 'undefined') {
+      localStorage.removeItem('exspend_wallet_source');
+    }
+    return order;
   } catch {
     return null;
   }
