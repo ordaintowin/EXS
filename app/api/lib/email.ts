@@ -8,8 +8,8 @@ export type EmailPayload = {
 
 export async function sendEmail(payload: EmailPayload): Promise<boolean> {
   if (!process.env.RESEND_API_KEY) {
-    console.log('[Email disabled] Would have sent:', payload.subject, 'to', payload.to);
-    return true;
+    console.warn('[Email disabled] No RESEND_API_KEY configured; skipped:', payload.subject);
+    return false;
   }
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);

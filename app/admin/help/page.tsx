@@ -246,6 +246,8 @@ export default function AdminHelpPage() {
       router.replace('/');
       return;
     }
+    // This effect intentionally starts an async data load after client auth is available.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadTickets();
   }, [router, loadTickets]);
 

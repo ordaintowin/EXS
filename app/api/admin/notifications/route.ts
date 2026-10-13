@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTokenFromRequest, verifyToken } from '@/app/api/lib/jwt';
 import { prisma } from '@/app/api/lib/prisma';
-
-function requireAdmin(request: NextRequest) {
-  const token = getTokenFromRequest(request);
-  const user = token ? verifyToken(token) : null;
-  return user?.isAdmin ? user : null;
-}
+import { getAuthenticatedAdmin } from '@/app/api/lib/auth';
 
 // POST /api/admin/notifications — create a notification for a specific user
 export async function POST(request: NextRequest) {
-  const admin = requireAdmin(request);
+  const admin = await getAuthenticatedAdmin(request);
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
@@ -27,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     const notification = await prisma.notification.create({
-      data: { userId, title, message, link: link ?? null },
+      data: { userId, recipientType: 'user', title, message, link: link ?? null },
     });
     return NextResponse.json({ notification }, { status: 201 });
   } catch (err) {

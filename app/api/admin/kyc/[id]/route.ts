@@ -1,12 +1,11 @@
 // PATCH /api/admin/kyc/[id] — approve or reject a KYC submission (admin only)
 import { NextRequest, NextResponse } from 'next/server';
-import { getTokenFromRequest, verifyToken } from '@/app/api/lib/jwt';
 import { prisma } from '@/app/api/lib/prisma';
+import { getAuthenticatedAdmin } from '@/app/api/lib/auth';
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const token = getTokenFromRequest(request);
-  const user = token ? verifyToken(token) : null;
-  if (!user || !user.isAdmin) {
+  const user = await getAuthenticatedAdmin(request);
+  if (!user) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

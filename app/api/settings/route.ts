@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTokenFromRequest, verifyToken } from '@/app/api/lib/jwt';
 import { prisma } from '@/app/api/lib/prisma';
-import { DEFAULT_WALLET_ADDRESSES } from '@/app/lib/crypto';
+import { getAuthenticatedAdmin } from '@/app/api/lib/auth';
 
 export async function GET() {
   try {
@@ -12,9 +11,11 @@ export async function GET() {
 
     const walletAddresses = settings
       ? {
+          USDT_ERC20: settings.USDT_ERC20,
           USDT_TRC20: settings.USDT_TRC20,
           USDT_BEP20: settings.USDT_BEP20,
           USDT_POLYGON: settings.USDT_POLYGON,
+          USDC_ERC20: settings.USDC_ERC20,
           USDC_BEP20: settings.USDC_BEP20,
           USDC_POLYGON: settings.USDC_POLYGON,
           BTC: settings.BTC,
@@ -23,7 +24,11 @@ export async function GET() {
           BINANCE_PAY: settings.BINANCE_PAY,
           BYBIT_PAY: settings.BYBIT_PAY,
         }
-      : DEFAULT_WALLET_ADDRESSES;
+      : null;
+
+    if (!walletAddresses) {
+      return NextResponse.json({ error: 'Wallet payment settings are not configured yet.' }, { status: 503 });
+    }
 
     return NextResponse.json({
       settings: {
@@ -35,22 +40,13 @@ export async function GET() {
       },
     });
   } catch {
-    return NextResponse.json({
-      settings: {
-        walletAddresses: DEFAULT_WALLET_ADDRESSES,
-        ghsPerUsd: 15.5,
-        buyRateGhsPerUsd: 15.5,
-        sellRateGhsPerUsd: 15.5,
-        updatedAt: new Date(),
-      },
-    });
+    return NextResponse.json({ error: 'Payment settings are temporarily unavailable.' }, { status: 503 });
   }
 }
 
 export async function POST(request: NextRequest) {
-  const token = getTokenFromRequest(request);
-  const user = token ? verifyToken(token) : null;
-  if (!user || !user.isAdmin) {
+  const user = await getAuthenticatedAdmin(request);
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -66,9 +62,11 @@ export async function POST(request: NextRequest) {
       where: { id: 'singleton' },
       create: {
         id: 'singleton',
+        USDT_ERC20: walletAddresses.USDT_ERC20 ?? '',
         USDT_TRC20: walletAddresses.USDT_TRC20 ?? '',
         USDT_BEP20: walletAddresses.USDT_BEP20 ?? '',
         USDT_POLYGON: walletAddresses.USDT_POLYGON ?? '',
+        USDC_ERC20: walletAddresses.USDC_ERC20 ?? '',
         USDC_BEP20: walletAddresses.USDC_BEP20 ?? '',
         USDC_POLYGON: walletAddresses.USDC_POLYGON ?? '',
         BTC: walletAddresses.BTC ?? '',
@@ -80,9 +78,11 @@ export async function POST(request: NextRequest) {
         ...(sellRateGhsPerUsd !== undefined && { sellRateGhsPerUsd: parseFloat(sellRateGhsPerUsd) }),
       },
       update: {
+        ...(walletAddresses.USDT_ERC20 !== undefined && { USDT_ERC20: walletAddresses.USDT_ERC20 }),
         ...(walletAddresses.USDT_TRC20 !== undefined && { USDT_TRC20: walletAddresses.USDT_TRC20 }),
         ...(walletAddresses.USDT_BEP20 !== undefined && { USDT_BEP20: walletAddresses.USDT_BEP20 }),
         ...(walletAddresses.USDT_POLYGON !== undefined && { USDT_POLYGON: walletAddresses.USDT_POLYGON }),
+        ...(walletAddresses.USDC_ERC20 !== undefined && { USDC_ERC20: walletAddresses.USDC_ERC20 }),
         ...(walletAddresses.USDC_BEP20 !== undefined && { USDC_BEP20: walletAddresses.USDC_BEP20 }),
         ...(walletAddresses.USDC_POLYGON !== undefined && { USDC_POLYGON: walletAddresses.USDC_POLYGON }),
         ...(walletAddresses.BTC !== undefined && { BTC: walletAddresses.BTC }),
@@ -111,9 +111,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       settings: {
         walletAddresses: {
+          USDT_ERC20: settings.USDT_ERC20,
           USDT_TRC20: settings.USDT_TRC20,
           USDT_BEP20: settings.USDT_BEP20,
           USDT_POLYGON: settings.USDT_POLYGON,
+          USDC_ERC20: settings.USDC_ERC20,
           USDC_BEP20: settings.USDC_BEP20,
           USDC_POLYGON: settings.USDC_POLYGON,
           BTC: settings.BTC,

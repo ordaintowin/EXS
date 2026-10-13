@@ -32,6 +32,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    if (
+      typeof documentType !== 'string' ||
+      typeof documentNumber !== 'string' ||
+      typeof frontImage !== 'string' ||
+      (backImage !== undefined && backImage !== null && typeof backImage !== 'string') ||
+      typeof selfieImage !== 'string' ||
+      documentType.length > 40 ||
+      documentNumber.trim().length < 3 ||
+      documentNumber.length > 120 ||
+      frontImage.length > 8_000_000 ||
+      (backImage && backImage.length > 8_000_000) ||
+      selfieImage.length > 8_000_000
+    ) {
+      return NextResponse.json({ error: 'Invalid KYC document data or image size.' }, { status: 400 });
+    }
+
+    const existingPending = await prisma.kycEntry.findFirst({
+      where: { userId: user.userId, status: 'pending' },
+      select: { id: true },
+    });
+    if (existingPending) {
+      return NextResponse.json({ error: 'Your KYC submission is already under review.' }, { status: 409 });
+    }
+
     const entry = await prisma.kycEntry.create({
       data: {
         userId: user.userId,

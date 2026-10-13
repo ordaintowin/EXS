@@ -148,17 +148,13 @@ function HelpPageContent() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!subject.trim() || !message.trim()) return;
-    if (!orderId.trim()) {
-      setSubmitError('A valid Order ID is required to open a ticket.');
-      return;
-    }
     setSubmitting(true);
     setSubmitError('');
     try {
       const res = await fetch('/api/help/tickets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ subject, message, orderId: orderId.trim(), attachmentUrl: attachmentBase64 }),
+         body: JSON.stringify({ subject, message, orderId: orderId.trim() || undefined, attachmentUrl: attachmentBase64 }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -454,7 +450,7 @@ function HelpPageContent() {
         ) : (
           <form onSubmit={handleSubmit} className="bg-white border border-green-200 rounded-xl shadow-sm p-5 flex flex-col gap-4">
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 text-sm text-yellow-800">
-              ℹ️ Tickets can only be opened for completed orders (successful, failed, or cancelled). For help during an active order, use the order chat.
+              ℹ️ You can open a general support ticket, or include an Order ID if your question is about a specific completed order.
             </div>
             {submitSuccess && (
               <div className="bg-green-50 border border-green-300 text-green-800 rounded-lg px-4 py-3 text-sm">
@@ -467,7 +463,7 @@ function HelpPageContent() {
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Order ID <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Order ID <span className="text-gray-400 font-normal">(optional)</span></label>
               <input
                 type="text"
                 value={orderId}
@@ -476,7 +472,7 @@ function HelpPageContent() {
                 placeholder="Paste your Order ID here"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-green-400"
               />
-              <p className="text-xs text-gray-400 mt-1">Find your Order ID in My Orders or the order detail page.</p>
+              <p className="text-xs text-gray-400 mt-1">Add it when your question is about a specific order.</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>

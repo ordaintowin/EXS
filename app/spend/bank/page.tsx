@@ -240,7 +240,7 @@ export default function BankPage() {
         </div>
 
         {/* Live Calculation */}
-        <WalletFundingSelector asset={crypto} amountGhs={amountNum} cryptoAmount={cryptoAmount} />
+        <WalletFundingSelector asset={crypto} amountGhs={amountNum} cryptoAmount={cryptoAmount} required />
         <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-4 text-sm flex flex-col gap-1 text-green-900">
           <p>
             Amount: <strong className="text-green-700 text-base">{amountNum > 0 ? `GHS ${amountNum.toLocaleString()}` : '—'}</strong>

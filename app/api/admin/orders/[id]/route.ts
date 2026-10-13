@@ -1,17 +1,11 @@
 // PATCH /api/admin/orders/[id] — admin only: update order status and optionally add admin note
 // GET /api/admin/orders/[id] — admin only: get single order details
 import { NextRequest, NextResponse } from 'next/server';
-import { getTokenFromRequest, verifyToken } from '@/app/api/lib/jwt';
 import { prisma } from '@/app/api/lib/prisma';
+import { getAuthenticatedAdmin } from '@/app/api/lib/auth';
 import { sendEmail } from '@/app/api/lib/email';
 import { orderStatusUpdateEmail } from '@/app/api/lib/email-templates';
 import { OrderStatus } from '@prisma/client';
-
-function requireAdmin(request: NextRequest) {
-  const token = getTokenFromRequest(request);
-  const user = token ? verifyToken(token) : null;
-  return user?.isAdmin ? user : null;
-}
 
 const VALID_STATUSES: OrderStatus[] = ['waiting', 'pending', 'processing', 'successful', 'failed', 'cancelled'];
 const EMAIL_STATUSES: OrderStatus[] = ['processing', 'successful', 'failed'];
@@ -21,7 +15,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = requireAdmin(request);
+  const admin = await getAuthenticatedAdmin(request);
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;
@@ -49,7 +43,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = requireAdmin(request);
+  const admin = await getAuthenticatedAdmin(request);
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id } = await params;

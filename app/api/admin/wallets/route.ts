@@ -1,14 +1,16 @@
 // GET /api/admin/wallets — return current wallet settings (admin only)
 // PATCH /api/admin/wallets — update wallet settings (admin only)
 import { NextRequest, NextResponse } from 'next/server';
-import { getTokenFromRequest, verifyToken } from '@/app/api/lib/jwt';
 import { prisma } from '@/app/api/lib/prisma';
+import { getAuthenticatedAdmin } from '@/app/api/lib/auth';
 
 const MONITORED_ADDRESS_FIELDS = [
+  'USDT_ERC20',
   'USDT_TRC20',
   'USDT_BEP20',
   'USDT_POLYGON',
   'USDC_BEP20',
+  'USDC_ERC20',
   'USDC_POLYGON',
   'BTC',
   'BNB',
@@ -27,26 +29,19 @@ function getDepositAlertReadiness(settings: Record<string, unknown> | null) {
   };
 }
 
-function requireAdmin(request: NextRequest) {
-  const token = getTokenFromRequest(request);
-  const user = token ? verifyToken(token) : null;
-  if (!user || !user.isAdmin) {
-    return null;
-  }
-  return user;
-}
-
 export async function GET(request: NextRequest) {
-  if (!requireAdmin(request)) {
+  if (!(await getAuthenticatedAdmin(request))) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   try {
     const settings = await prisma.walletSettings.findUnique({ where: { id: 'singleton' } });
     const wallets = settings ?? {
+      USDT_ERC20: '',
       USDT_TRC20: '',
       USDT_BEP20: '',
       USDT_POLYGON: '',
+      USDC_ERC20: '',
       USDC_BEP20: '',
       USDC_POLYGON: '',
       BTC: '',
@@ -65,15 +60,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  if (!requireAdmin(request)) {
+  if (!(await getAuthenticatedAdmin(request))) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   try {
     const body = await request.json();
     const fields = [
-      'USDT_TRC20', 'USDT_BEP20', 'USDT_POLYGON',
-      'USDC_BEP20', 'USDC_POLYGON',
+      'USDT_ERC20', 'USDT_TRC20', 'USDT_BEP20', 'USDT_POLYGON',
+      'USDC_ERC20', 'USDC_BEP20', 'USDC_POLYGON',
       'BTC', 'BNB', 'ETH',
       'BINANCE_PAY', 'BYBIT_PAY',
     ] as const;

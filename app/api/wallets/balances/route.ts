@@ -17,7 +17,7 @@ type Token = { asset: string; name: string; address: string; decimals: number };
 type ChainConfig = {
   nativeAsset: string;
   nativeName: string;
-  rpc: string;
+  rpcs: string[];
   tokens: Token[];
 };
 
@@ -25,7 +25,12 @@ const CHAIN_CONFIG: Record<'ethereum' | 'bsc' | 'polygon', ChainConfig> = {
   ethereum: {
     nativeAsset: 'ETH',
     nativeName: 'Ethereum',
-    rpc: 'https://cloudflare-eth.com',
+    rpcs: [
+      'https://cloudflare-eth.com',
+      'https://ethereum-rpc.publicnode.com',
+      'https://1rpc.io/eth',
+      'https://eth.llamarpc.com',
+    ],
     tokens: [
       { asset: 'USDT', name: 'Tether USD', address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', decimals: 6 },
       { asset: 'USDC', name: 'USD Coin', address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', decimals: 6 },
@@ -34,7 +39,11 @@ const CHAIN_CONFIG: Record<'ethereum' | 'bsc' | 'polygon', ChainConfig> = {
   bsc: {
     nativeAsset: 'BNB',
     nativeName: 'BNB',
-    rpc: 'https://bsc-dataseed.binance.org',
+    rpcs: [
+      'https://bsc-dataseed.binance.org',
+      'https://bsc.publicnode.com',
+      'https://1rpc.io/bnb',
+    ],
     tokens: [
       { asset: 'USDT', name: 'Tether USD', address: '0x55d398326f99059fF775485246999027B3197955', decimals: 18 },
       { asset: 'USDC', name: 'USD Coin', address: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d', decimals: 18 },
@@ -43,7 +52,11 @@ const CHAIN_CONFIG: Record<'ethereum' | 'bsc' | 'polygon', ChainConfig> = {
   polygon: {
     nativeAsset: 'POL',
     nativeName: 'Polygon',
-    rpc: 'https://polygon-rpc.com',
+    rpcs: [
+      'https://polygon-rpc.com',
+      'https://polygon-bor-rpc.publicnode.com',
+      'https://1rpc.io/matic',
+    ],
     tokens: [
       { asset: 'USDT', name: 'Tether USD', address: '0xc2132D05D31c914a87C6611C10748AaCbAe1FfC6', decimals: 6 },
       { asset: 'USDC', name: 'USD Coin', address: '0x3c499c542cef5e3811e1192ce70d8cc03d5c3359', decimals: 6 },
@@ -62,18 +75,24 @@ const COINGECKO_IDS = [
   'usd-coin',
 ].join(',');
 
-async function rpc<T>(url: string, method: string, params: unknown[]): Promise<T> {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
-    cache: 'no-store',
-    signal: AbortSignal.timeout(12_000),
-  });
-  if (!response.ok) throw new Error(`Blockchain RPC returned ${response.status}.`);
-  const body = await response.json();
-  if (body.error || body.result === undefined) throw new Error('Blockchain RPC could not read this address.');
-  return body.result as T;
+async function rpc<T>(urls: string[], method: string, params: unknown[]): Promise<T> {
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+        cache: 'no-store',
+        signal: AbortSignal.timeout(7_000),
+      });
+      if (!response.ok) continue;
+      const body = await response.json();
+      if (!body.error && body.result !== undefined) return body.result as T;
+    } catch {
+      // Try the next public endpoint. A single RPC outage should not hide a verified wallet.
+    }
+  }
+  throw new Error('Public blockchain balance services are temporarily unavailable.');
 }
 
 function tokenBalanceCall(walletAddress: string): string {
@@ -83,23 +102,24 @@ function tokenBalanceCall(walletAddress: string): string {
 async function evmHoldings(
   chain: 'ethereum' | 'bsc' | 'polygon',
   walletAddress: string,
+  requestedAsset: string,
 ): Promise<Array<{ asset: string; name: string; amount: string }>> {
   const config = CHAIN_CONFIG[chain];
-  const nativeHex = await rpc<string>(config.rpc, 'eth_getBalance', [walletAddress, 'latest']);
-  const tokenRows = await Promise.all(config.tokens.map(async (token) => {
-    const raw = await rpc<string>(config.rpc, 'eth_call', [
-      { to: token.address, data: tokenBalanceCall(walletAddress) },
-      'latest',
-    ]);
-    return { asset: token.asset, name: token.name, amount: formatUnits(BigInt(raw), token.decimals) };
-  }));
-  return [
-    { asset: config.nativeAsset, name: config.nativeName, amount: formatUnits(BigInt(nativeHex), 18) },
-    ...tokenRows,
-  ];
+  if (requestedAsset === config.nativeAsset) {
+    const nativeHex = await rpc<string>(config.rpcs, 'eth_getBalance', [walletAddress, 'latest']);
+    return [{ asset: config.nativeAsset, name: config.nativeName, amount: formatUnits(BigInt(nativeHex), 18) }];
+  }
+
+  const token = config.tokens.find((item) => item.asset === requestedAsset || (requestedAsset === 'USDC' && item.asset === 'USDC.e'));
+  if (!token) return [];
+  const raw = await rpc<string>(config.rpcs, 'eth_call', [
+    { to: token.address, data: tokenBalanceCall(walletAddress) },
+    'latest',
+  ]);
+  return [{ asset: requestedAsset, name: token.name, amount: formatUnits(BigInt(raw), token.decimals) }];
 }
 
-async function tronHoldings(address: string): Promise<Array<{ asset: string; name: string; amount: string }>> {
+async function tronHoldings(address: string, requestedAsset: string): Promise<Array<{ asset: string; name: string; amount: string }>> {
   const response = await fetch(`https://api.trongrid.io/v1/accounts/${encodeURIComponent(address)}`, {
     cache: 'no-store',
     signal: AbortSignal.timeout(12_000),
@@ -111,10 +131,10 @@ async function tronHoldings(address: string): Promise<Array<{ asset: string; nam
   for (const entry of account?.trc20 ?? []) Object.assign(tokenMap, entry);
   const rawUsdt = tokenMap.TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t ?? '0';
 
-  return [
-    { asset: 'TRX', name: 'TRON', amount: formatUnits(BigInt(account?.balance ?? 0), 6) },
-    { asset: 'USDT', name: 'Tether USD', amount: formatUnits(BigInt(rawUsdt), 6) },
-  ];
+  if (requestedAsset === 'TRX') {
+    return [{ asset: 'TRX', name: 'TRON', amount: formatUnits(BigInt(account?.balance ?? 0), 6) }];
+  }
+  return [{ asset: 'USDT', name: 'Tether USD', amount: formatUnits(BigInt(rawUsdt), 6) }];
 }
 
 async function bitcoinHoldings(address: string): Promise<Array<{ asset: string; name: string; amount: string }>> {
@@ -149,7 +169,7 @@ export async function GET(request: NextRequest) {
       prisma.linkedWallet.findMany({
         where: { userId: user.userId },
         orderBy: { createdAt: 'asc' },
-        select: { id: true, chain: true, address: true },
+        select: { id: true, chain: true, asset: true, provider: true, address: true },
       }),
       prisma.walletSettings.findUnique({ where: { id: 'singleton' }, select: { sellRateGhsPerUsd: true } }),
       prisma.exchangeRate.findFirst({ orderBy: { createdAt: 'desc' }, select: { ghsPerUsd: true } }),
@@ -166,40 +186,56 @@ export async function GET(request: NextRequest) {
         let rows: Array<{ asset: string; name: string; amount: string }>;
         if (wallet.chain === 'ethereum' || wallet.chain === 'bsc' || wallet.chain === 'polygon') {
           if (!isAddress(wallet.address)) throw new Error('Stored EVM address is invalid.');
-          rows = await evmHoldings(wallet.chain, wallet.address);
+          rows = await evmHoldings(wallet.chain, wallet.address, wallet.asset);
         } else if (wallet.chain === 'tron') {
-          rows = await tronHoldings(wallet.address);
+          rows = await tronHoldings(wallet.address, wallet.asset);
         } else {
           rows = await bitcoinHoldings(wallet.address);
         }
-        return { walletId: wallet.id, holdings: rows, error: null as string | null };
+        return {
+          walletId: wallet.id,
+          chain: wallet.chain,
+          asset: wallet.asset,
+          provider: wallet.provider,
+          address: wallet.address,
+          holdings: rows,
+          error: null as string | null,
+        };
       } catch (error) {
         return {
           walletId: wallet.id,
+          chain: wallet.chain,
+          asset: wallet.asset,
+          provider: wallet.provider,
+          address: wallet.address,
           holdings: [] as Array<{ asset: string; name: string; amount: string }>,
-          error: error instanceof Error ? error.message : 'Could not read this wallet balance.',
+          error: error instanceof Error && error.message === 'Public blockchain balance services are temporarily unavailable.'
+            ? `${wallet.chain === 'ethereum' ? 'Ethereum' : wallet.chain === 'bsc' ? 'BNB Chain' : wallet.chain === 'polygon' ? 'Polygon' : wallet.chain} balance service is temporarily unavailable. Your wallet is still verified; try refreshing later.`
+            : error instanceof Error ? error.message : 'Could not read this wallet balance.',
         };
       }
     }));
 
-    const pricesResponse = await fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${COINGECKO_IDS}&vs_currencies=usd`,
-      { cache: 'no-store', signal: AbortSignal.timeout(12_000) },
-    );
-    if (!pricesResponse.ok) {
-      return NextResponse.json({ error: 'Live crypto prices are temporarily unavailable; balances were not converted.' }, { status: 503 });
+    let prices: Record<string, { usd?: number }> = {};
+    try {
+      const pricesResponse = await fetch(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${COINGECKO_IDS}&vs_currencies=usd`,
+        { cache: 'no-store', signal: AbortSignal.timeout(12_000) },
+      );
+      if (pricesResponse.ok) prices = await pricesResponse.json();
+    } catch {
+      // Stablecoins still have a useful GHS estimate if the price service is unavailable.
     }
-    const prices = await pricesResponse.json();
 
     const enriched = balances.map((wallet) => ({
       ...wallet,
       holdings: wallet.holdings.map((holding): Holding => {
         const usdPerCoin = prices[priceId(holding.asset)]?.usd;
         const amount = Number(holding.amount);
-        if (typeof usdPerCoin !== 'number' || !Number.isFinite(amount)) {
-          throw new Error(`A live price is unavailable for ${holding.asset}.`);
-        }
-        const usdValue = amount * usdPerCoin;
+        const usablePrice = typeof usdPerCoin === 'number' && Number.isFinite(usdPerCoin)
+          ? usdPerCoin
+          : holding.asset === 'USDT' || holding.asset === 'USDC' ? 1 : 0;
+        const usdValue = Number.isFinite(amount) ? amount * usablePrice : 0;
         return {
           ...holding,
           usdValue,

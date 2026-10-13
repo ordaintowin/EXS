@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isAddress } from 'ethers';
 import { getTokenFromRequest, verifyToken } from '@/app/api/lib/jwt';
 import { prisma } from '@/app/api/lib/prisma';
 import { sendEmail } from '@/app/api/lib/email';
 import { orderConfirmationEmail, adminNewOrderEmail } from '@/app/api/lib/email-templates';
-import { DEFAULT_WALLET_ADDRESSES } from '@/app/lib/crypto';
 import { OrderType, ServiceType, WalletChain } from '@prisma/client';
 
 function parsePositiveNumber(value: unknown): number | null {
@@ -20,10 +20,28 @@ function parsePositiveNumber(value: unknown): number | null {
 function walletChainForAsset(asset: string): WalletChain | null {
   if (asset === 'BTC') return WalletChain.bitcoin;
   if (asset === 'USDT_TRC20') return WalletChain.tron;
+  if (asset === 'USDT_ERC20' || asset === 'USDC_ERC20' || asset === 'ETH') return WalletChain.ethereum;
   if (asset === 'USDT_BEP20' || asset === 'USDC_BEP20' || asset === 'BNB') return WalletChain.bsc;
   if (asset === 'USDT_POLYGON' || asset === 'USDC_POLYGON') return WalletChain.polygon;
-  if (asset === 'ETH') return WalletChain.ethereum;
   return null;
+}
+
+function walletAssetForOrder(asset: string): string | null {
+  if (asset === 'BTC' || asset === 'ETH' || asset === 'BNB' || asset === 'POL') return asset;
+  if (asset.startsWith('USDT')) return 'USDT';
+  if (asset.startsWith('USDC')) return 'USDC';
+  return null;
+}
+
+function isValidExternalWalletAddress(chain: WalletChain, address: string) {
+  if (chain === WalletChain.ethereum || chain === WalletChain.bsc || chain === WalletChain.polygon) {
+    return isAddress(address);
+  }
+  if (chain === WalletChain.tron) return /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(address);
+  if (chain === WalletChain.bitcoin) {
+    return /^(bc1[ac-hj-np-z02-9]{11,71}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})$/.test(address);
+  }
+  return false;
 }
 
 function requireAuth(request: NextRequest) {
@@ -58,7 +76,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const service = body.service;
+    const service = typeof body.service === 'string' ? body.service.trim() : '';
     const serviceType = body.serviceType;
     const recipient = body.recipient ?? null;
     const recipientName = body.recipientName ?? null;
@@ -71,7 +89,9 @@ export async function POST(request: NextRequest) {
     const reference = body.reference ?? null;
     const bundleLabel = body.bundleLabel ?? null;
     const orderType = body.orderType ?? 'spend';
-    const userWalletAddress = body.userWalletAddress ?? null;
+    const userWalletAddress = typeof body.userWalletAddress === 'string'
+      ? body.userWalletAddress.trim() || null
+      : null;
     const sellPayoutPhone = body.sellPayoutPhone ?? null;
     const sellPayoutBank = body.sellPayoutBank ?? null;
     // Payment method fields (for buy orders)
@@ -82,7 +102,17 @@ export async function POST(request: NextRequest) {
     const paymentMomoProvider = body.paymentMomoProvider ?? null;
     const paymentMomoNumber = body.paymentMomoNumber ?? null;
 
-    if (!service || !serviceType || !cryptoAsset || !cryptoAmount) {
+    const validOrderTypes = Object.values(OrderType);
+    const validServiceTypes = Object.values(ServiceType);
+    if (
+      !service ||
+      service.length > 120 ||
+      !validOrderTypes.includes(orderType) ||
+      !validServiceTypes.includes(serviceType) ||
+      typeof cryptoAsset !== 'string' ||
+      !cryptoAsset ||
+      !cryptoAmount
+    ) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -95,17 +125,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Amounts and exchange rates must be valid positive numbers.' }, { status: 400 });
     }
 
-    if (typeof userWalletAddress === 'string' && userWalletAddress.trim() && (orderType === 'spend' || orderType === 'sell')) {
+    const expectedChain = walletChainForAsset(String(cryptoAsset));
+    const expectedAsset = walletAssetForOrder(String(cryptoAsset));
+    if (orderType === 'spend' && !userWalletAddress) {
+      return NextResponse.json({ error: 'Select one of your linked wallets before spending.' }, { status: 400 });
+    }
+    if (orderType === 'sell' && expectedChain && !userWalletAddress) {
+      return NextResponse.json({ error: 'Choose a linked or external wallet before selling.' }, { status: 400 });
+    }
+
+    if (orderType === 'buy' && !userWalletAddress) {
+      return NextResponse.json({ error: 'Enter a wallet address to receive the crypto.' }, { status: 400 });
+    }
+
+    if (userWalletAddress && (orderType === 'spend' || orderType === 'sell' || orderType === 'buy')) {
       const linkedWallet = await prisma.linkedWallet.findFirst({
-        where: { userId: user.userId, address: userWalletAddress.trim() },
-        select: { id: true, chain: true },
+        where: {
+          userId: user.userId,
+          address: userWalletAddress,
+          ...(expectedChain ? { chain: expectedChain } : {}),
+          ...(expectedAsset ? { asset: expectedAsset } : {}),
+        },
+        select: { id: true, chain: true, asset: true },
       });
-      if (!linkedWallet) {
+      if (!linkedWallet && orderType === 'spend') {
         return NextResponse.json({ error: 'Select one of your verified linked wallets as the debit source.' }, { status: 400 });
       }
-      const expectedChain = walletChainForAsset(String(cryptoAsset));
-      if (expectedChain && linkedWallet.chain !== expectedChain) {
+      if (linkedWallet && expectedChain && linkedWallet.chain !== expectedChain) {
         return NextResponse.json({ error: 'The selected source wallet is on the wrong network for this asset.' }, { status: 400 });
+      }
+      if (linkedWallet && expectedAsset && linkedWallet.asset !== expectedAsset) {
+        return NextResponse.json({ error: 'The selected wallet is not linked for this asset.' }, { status: 400 });
+      }
+      if (!linkedWallet && orderType === 'sell' && expectedChain && !isValidExternalWalletAddress(expectedChain, userWalletAddress)) {
+        return NextResponse.json({ error: 'Enter a valid external wallet address for this network.' }, { status: 400 });
+      }
+      if (!linkedWallet && orderType === 'buy' && expectedChain && !isValidExternalWalletAddress(expectedChain, userWalletAddress)) {
+        return NextResponse.json({ error: 'Enter a valid external wallet address for this network.' }, { status: 400 });
       }
     }
 
@@ -182,7 +238,7 @@ export async function POST(request: NextRequest) {
       const settings = await prisma.walletSettings.findUnique({ where: { id: 'singleton' } });
       const walletAddress = settings
         ? (settings as Record<string, unknown>)[cryptoAsset] as string || ''
-        : DEFAULT_WALLET_ADDRESSES[cryptoAsset] || '';
+        : '';
 
       await sendEmail({
         to: orderUser.email,

@@ -37,31 +37,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Subject and message are required' }, { status: 400 });
     }
 
-    if (!orderId) {
-      return NextResponse.json({ error: 'A valid Order ID is required to open a ticket' }, { status: 400 });
-    }
+    if (orderId) {
+      const order = await prisma.order.findFirst({
+        where: { id: orderId, userId: user.userId },
+        select: { id: true },
+      });
 
-    // Validate that the order belongs to the user
-    const order = await prisma.order.findFirst({
-      where: { id: orderId, userId: user.userId },
-      select: { id: true, status: true },
-    });
-
-    if (!order) {
-      return NextResponse.json({ error: 'Order not found or does not belong to you' }, { status: 400 });
-    }
-
-    if (!['successful', 'failed', 'cancelled'].includes(order.status)) {
-      return NextResponse.json(
-        { error: 'Tickets can only be opened for completed orders (successful, failed, or cancelled). Use the chat during active orders.' },
-        { status: 400 }
-      );
+      if (!order) {
+        return NextResponse.json({ error: 'Order not found or does not belong to you' }, { status: 400 });
+      }
     }
 
     const ticket = await prisma.helpTicket.create({
       data: {
         userId: user.userId,
-        orderId,
+        ...(orderId ? { orderId } : {}),
         subject,
         message,
         ...(attachmentUrl ? { attachmentUrl } : {}),

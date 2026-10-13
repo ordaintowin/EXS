@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const wallets = await prisma.linkedWallet.findMany({
       where: { userId: user.userId },
       orderBy: { createdAt: 'asc' },
-      select: { id: true, chain: true, address: true, verifiedAt: true, createdAt: true },
+      select: { id: true, chain: true, asset: true, provider: true, address: true, verifiedAt: true, createdAt: true },
     });
     return NextResponse.json({ wallets });
   } catch (error) {

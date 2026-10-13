@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTokenFromRequest, verifyToken } from '@/app/api/lib/jwt';
 import { prisma } from '@/app/api/lib/prisma';
+import { getAuthenticatedAdmin } from '@/app/api/lib/auth';
 
 // POST /api/rates — admin only, create new ExchangeRate record
 export async function POST(request: NextRequest) {
-  const token = getTokenFromRequest(request);
-  const user = token ? verifyToken(token) : null;
-  if (!user || !user.isAdmin) {
+  const user = await getAuthenticatedAdmin(request);
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

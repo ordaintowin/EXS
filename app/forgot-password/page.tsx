@@ -70,6 +70,7 @@ export default function ForgotPasswordPage() {
                 placeholder="your@email.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
+                autoComplete="email"
                 required
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
               />

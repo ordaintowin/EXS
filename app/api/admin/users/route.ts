@@ -1,12 +1,11 @@
 // GET /api/admin/users — admin only, returns all users + their KYC status
 import { NextRequest, NextResponse } from 'next/server';
-import { getTokenFromRequest, verifyToken } from '@/app/api/lib/jwt';
 import { prisma } from '@/app/api/lib/prisma';
+import { getAuthenticatedAdmin } from '@/app/api/lib/auth';
 
 export async function GET(request: NextRequest) {
-  const token = getTokenFromRequest(request);
-  const user = token ? verifyToken(token) : null;
-  if (!user || !user.isAdmin) {
+  const user = await getAuthenticatedAdmin(request);
+  if (!user) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

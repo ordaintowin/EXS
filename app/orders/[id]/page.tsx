@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getToken } from '@/app/lib/auth';
 import OrderChat from '@/app/components/OrderChat';
@@ -119,7 +119,6 @@ function CountdownTimer({ createdAt, onExpire }: { createdAt: string; onExpire: 
 
 export default function OrderDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const orderId = params?.id as string;
 
   const [order, setOrder] = useState<ApiOrder | null>(null);

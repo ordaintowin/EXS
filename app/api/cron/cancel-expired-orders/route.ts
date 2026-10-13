@@ -8,7 +8,12 @@ export async function GET(request: NextRequest) {
   // Simple protection: check for a secret header or allow internal calls
   const cronSecret = request.headers.get('x-cron-secret');
   const configuredSecret = process.env.CRON_SECRET;
-  if (configuredSecret && cronSecret !== configuredSecret) {
+  const authorization = request.headers.get('authorization');
+  const bearerSecret = authorization?.startsWith('Bearer ') ? authorization.slice(7) : null;
+  if (!configuredSecret) {
+    return NextResponse.json({ error: 'Cron endpoint is not configured' }, { status: 503 });
+  }
+  if (cronSecret !== configuredSecret && bearerSecret !== configuredSecret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

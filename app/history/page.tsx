@@ -42,7 +42,10 @@ export default function HistoryPage() {
   useEffect(() => {
     const token = getToken();
     if (!token) {
+      // Auth is stored in browser storage and is unavailable during SSR.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setError('Sign in to view your activity.');
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       return;
     }

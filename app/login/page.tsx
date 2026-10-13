@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [banned, setBanned] = useState(false);
+  const [emailNotVerified, setEmailNotVerified] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -19,6 +20,8 @@ export default function LoginPage() {
     if (user) {
       router.replace('/spend');
     } else {
+      // This page must wait for browser storage before rendering the form.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMounted(true);
     }
   }, [router]);
@@ -29,6 +32,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setBanned(false);
+    setEmailNotVerified(false);
     setLoading(true);
     const result = await loginUser(email, password);
     setLoading(false);
@@ -36,6 +40,9 @@ export default function LoginPage() {
       router.replace('/spend');
     } else if (result.banned) {
       setBanned(true);
+    } else if (result.emailNotVerified) {
+      setEmailNotVerified(true);
+      setError(result.error ?? 'Please verify your email address before signing in.');
     } else {
       setError(result.error ?? 'Login failed.');
     }
@@ -63,6 +70,7 @@ export default function LoginPage() {
               placeholder="your@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               required
               className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
             />
@@ -75,12 +83,22 @@ export default function LoginPage() {
               placeholder="Your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               required
               className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
             />
           </div>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
+
+          {emailNotVerified && (
+            <Link
+              href={`/verify-email?email=${encodeURIComponent(email.trim().toLowerCase())}`}
+              className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-900 hover:bg-amber-100"
+            >
+              Resend verification email
+            </Link>
+          )}
 
           {banned && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">

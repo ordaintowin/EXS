@@ -28,6 +28,7 @@ model User {
   helpTickets      HelpTicket[]
   receipts         Receipt[]
   passwordResets   PasswordReset[]
+  emailVerificationTokens EmailVerificationToken[]
   notifications    Notification[]
   orderMessages    OrderMessage[]
   linkedWallets    LinkedWallet[]
@@ -139,9 +140,11 @@ model ExchangeRate {
 
 model WalletSettings {
   id                String   @id @default("singleton")
+  USDT_ERC20        String   @default("")
   USDT_TRC20        String   @default("")
   USDT_BEP20        String   @default("")
   USDT_POLYGON      String   @default("")
+  USDC_ERC20        String   @default("")
   USDC_BEP20        String   @default("")
   USDC_POLYGON      String   @default("")
   BTC               String   @default("")
@@ -205,6 +208,19 @@ model PasswordReset {
   usedAt    DateTime?
   createdAt DateTime  @default(now())
 }
+
+model EmailVerificationToken {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, expiresAt])
+}
+
 model Notification {
   id             String   @id @default(uuid())
   userId         String
@@ -231,12 +247,15 @@ model LinkedWallet {
   userId     String
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   chain      WalletChain
+  asset      String     @default("BTC")
+  provider   String     @default("manual")
   address    String
   verifiedAt DateTime   @default(now())
   createdAt  DateTime   @default(now())
 
-  @@unique([chain, address])
-  @@index([userId, chain])
+  @@unique([userId, chain, asset])
+  @@unique([chain, address, asset])
+  @@index([userId, chain, asset])
 }
 
 model WalletChallenge {
@@ -244,13 +263,15 @@ model WalletChallenge {
   userId    String
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   chain     WalletChain
+  asset     String      @default("BTC")
+  provider  String      @default("manual")
   address   String
   message   String      @db.Text
   expiresAt DateTime
   consumedAt DateTime?
   createdAt DateTime    @default(now())
 
-  @@index([userId, chain, address, createdAt])
+  @@index([userId, chain, address, asset, createdAt])
   @@index([expiresAt])
 }
 

@@ -18,7 +18,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [showWarning, setShowWarning] = useState(false);
   const [countdown, setCountdown] = useState(60);
 
-  const lastActiveRef = useRef<number>(Date.now());
+  const lastActiveRef = useRef<number>(0);
 
   const doLogout = useCallback(() => {
     logout();
@@ -32,6 +32,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
+    lastActiveRef.current = Date.now();
     const user = getCurrentUser();
 
     if (!user) {
@@ -42,7 +43,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.replace('/spend');
       return;
     }
+    // Auth is stored in browser storage, so these states must be set after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsAdmin(true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setChecked(true);
   }, [router]);
 

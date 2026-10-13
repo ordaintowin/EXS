@@ -42,6 +42,8 @@ export default function NavBar() {
   const [user, setUser] = useState<ReturnType<typeof getCurrentUser>>(null);
 
   useEffect(() => {
+    // Auth is stored in browser storage and can change after client navigation.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setUser(getCurrentUser());
   }, [pathname]);
 

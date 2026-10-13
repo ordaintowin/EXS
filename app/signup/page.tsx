@@ -94,7 +94,9 @@ export default function SignupPage() {
     setLoading(false);
 
     if (result.success) {
-      if (walletSetup === 'later') {
+      if (result.verificationRequired) {
+        router.push(`/verify-email?email=${encodeURIComponent(email.trim().toLowerCase())}&sent=${result.verificationSent === false ? '0' : '1'}`);
+      } else if (walletSetup === 'later') {
         router.push('/spend');
       } else if (walletSetup === 'create') {
         router.push('/wallets?setup=create');
@@ -140,6 +142,7 @@ export default function SignupPage() {
               placeholder="your@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               required
               className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
             />
@@ -165,6 +168,7 @@ export default function SignupPage() {
               placeholder="Create a password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
               minLength={6}
               required
               className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
@@ -178,6 +182,7 @@ export default function SignupPage() {
               placeholder="Repeat your password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              autoComplete="new-password"
               required
               className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
             />

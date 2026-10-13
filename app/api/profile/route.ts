@@ -11,13 +11,17 @@ export async function PATCH(request: NextRequest) {
   try {
     const { name, phone } = await request.json();
 
-    if (!name && !phone) {
+    if (name === undefined && phone === undefined) {
       return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
     }
 
     const updates: { name?: string; phone?: string } = {};
-    if (name) updates.name = String(name).trim();
-    if (phone) updates.phone = String(phone).trim();
+    if (name !== undefined) {
+      const normalizedName = String(name).trim();
+      if (!normalizedName) return NextResponse.json({ error: 'Name cannot be empty' }, { status: 400 });
+      updates.name = normalizedName;
+    }
+    if (phone !== undefined) updates.phone = String(phone).trim();
 
     const updated = await prisma.user.update({
       where: { id: user.userId },
@@ -32,7 +36,15 @@ export async function PATCH(request: NextRequest) {
     });
 
     return NextResponse.json({
-      user: { id: updated.id, name: updated.name, email: updated.email, phone: updated.phone, createdAt: updated.createdAt },
+      user: {
+        id: updated.id,
+        name: updated.name,
+        email: updated.email,
+        phone: updated.phone,
+        isAdmin: updated.isAdmin,
+        isVerified: updated.isVerified,
+        createdAt: updated.createdAt,
+      },
       token: newToken,
     });
   } catch {

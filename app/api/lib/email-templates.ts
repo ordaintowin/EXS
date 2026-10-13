@@ -116,6 +116,32 @@ export function passwordResetEmail(params: {
   `;
 }
 
+export function emailVerificationEmail(params: {
+  userName: string;
+  verificationLink: string;
+}): string {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: #14532d; padding: 20px; border-radius: 12px 12px 0 0; text-align: center;">
+        <h1 style="color: #a3e635; margin: 0; font-size: 24px;">⚡ Exspend</h1>
+        <p style="color: white; margin: 8px 0 0 0; font-size: 14px;">Verify your email address</p>
+      </div>
+      <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none;">
+        <p style="color: #374151; font-size: 16px;">Hi <strong>${params.userName}</strong>,</p>
+        <p style="color: #374151;">Thanks for creating an Exspend account. Please verify your email address to finish setting up your account.</p>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${params.verificationLink}" style="display: inline-block; background: #16a34a; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">Verify My Email</a>
+        </div>
+        <p style="color: #6b7280; font-size: 13px;">This link expires in <strong>24 hours</strong>.</p>
+        <p style="color: #9ca3af; font-size: 12px; margin-top: 16px;">Or copy this link: <a href="${params.verificationLink}" style="color: #16a34a; word-break: break-all;">${params.verificationLink}</a></p>
+      </div>
+      <div style="background: #f3f4f6; padding: 12px; border-radius: 0 0 12px 12px; text-align: center;">
+        <p style="color: #9ca3af; font-size: 12px; margin: 0;">© 2026 Exspend. Ghana's crypto-to-GHS gateway.</p>
+      </div>
+    </div>
+  `;
+}
+
 export function adminNewOrderEmail(params: {
   orderId: string;
   service: string;

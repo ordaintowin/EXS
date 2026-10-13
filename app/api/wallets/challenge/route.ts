@@ -6,6 +6,14 @@ import { getTokenFromRequest, verifyToken } from '@/app/api/lib/jwt';
 import { prisma } from '@/app/api/lib/prisma';
 
 const CHAINS = new Set<string>(Object.values(WalletChain));
+const ASSETS_BY_CHAIN: Record<WalletChain, string[]> = {
+  ethereum: ['ETH', 'USDT', 'USDC'],
+  bsc: ['BNB', 'USDT', 'USDC'],
+  polygon: ['POL', 'USDT', 'USDC'],
+  tron: ['USDT'],
+  bitcoin: ['BTC'],
+};
+const PROVIDERS = new Set(['metamask', 'trust', 'binance', 'bybit', 'blockchain', 'tronlink', 'unisat', 'manual']);
 
 function normalizeAddress(chain: WalletChain, value: unknown): string | null {
   if (typeof value !== 'string' || value.length > 128) return null;
@@ -39,6 +47,11 @@ export async function POST(request: NextRequest) {
     }
 
     const chain = body.chain as WalletChain;
+    const asset = typeof body.asset === 'string' ? body.asset.trim().toUpperCase() : '';
+    if (!ASSETS_BY_CHAIN[chain]?.includes(asset)) {
+      return NextResponse.json({ error: 'Choose a supported asset for this network.' }, { status: 400 });
+    }
+    const provider = typeof body.provider === 'string' && PROVIDERS.has(body.provider) ? body.provider : 'manual';
     const address = normalizeAddress(chain, body.address);
     if (!address) return NextResponse.json({ error: 'That wallet address is not valid for this network.' }, { status: 400 });
 
@@ -50,10 +63,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'This account cannot link wallets.' }, { status: 403 });
     }
 
+    const existingNetworkWallet = await prisma.linkedWallet.findFirst({
+      where: { userId: user.userId, chain, asset },
+      select: { address: true },
+    });
+    if (existingNetworkWallet) {
+      return NextResponse.json({
+        error: `You already have a ${asset} wallet linked on ${chain}. Unlink it before adding another wallet for this asset and network.`,
+      }, { status: 409 });
+    }
+
     const tooSoon = await prisma.walletChallenge.findFirst({
       where: {
         userId: user.userId,
         chain,
+        asset,
         address,
         createdAt: { gt: new Date(Date.now() - 10_000) },
       },
@@ -73,13 +97,15 @@ export async function POST(request: NextRequest) {
       '',
       `Account: ${user.userId}`,
       `Network: ${chain}`,
+      `Asset: ${asset}`,
+      `Provider: ${provider}`,
       `Address: ${address}`,
       `One-time code: ${nonce}`,
       `Expires: ${expiresAt.toISOString()}`,
     ].join('\n');
 
     const challenge = await prisma.walletChallenge.create({
-      data: { userId: user.userId, chain, address, message, expiresAt },
+      data: { userId: user.userId, chain, asset, provider, address, message, expiresAt },
       select: { id: true, message: true, expiresAt: true },
     });
 

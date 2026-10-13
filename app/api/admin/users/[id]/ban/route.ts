@@ -1,15 +1,14 @@
 // POST /api/admin/users/[id]/ban — admin only, toggle ban status for a user
 import { NextRequest, NextResponse } from 'next/server';
-import { getTokenFromRequest, verifyToken } from '@/app/api/lib/jwt';
 import { prisma } from '@/app/api/lib/prisma';
+import { getAuthenticatedAdmin } from '@/app/api/lib/auth';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const token = getTokenFromRequest(request);
-  const admin = token ? verifyToken(token) : null;
-  if (!admin || !admin.isAdmin) {
+  const admin = await getAuthenticatedAdmin(request);
+  if (!admin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 

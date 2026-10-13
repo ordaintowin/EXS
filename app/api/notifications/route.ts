@@ -25,6 +25,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ notifications });
   } catch (err) {
     console.error('GET /api/notifications ERROR:', err);
-    return NextResponse.json({ notifications: [] });
+    return NextResponse.json({ error: 'Failed to load notifications' }, { status: 503 });
   }
 }

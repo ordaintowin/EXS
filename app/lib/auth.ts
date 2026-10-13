@@ -6,6 +6,7 @@ export type User = {
   email: string;
   phone: string;
   isAdmin?: boolean;
+  isVerified?: boolean;
   createdAt: string;
 };
 
@@ -47,7 +48,7 @@ export function logout(): void {
 }
 
 // Call the API to register
-export async function registerUser(name: string, email: string, phone: string, password: string, referralCode?: string): Promise<{ success: boolean; error?: string }> {
+export async function registerUser(name: string, email: string, phone: string, password: string, referralCode?: string): Promise<{ success: boolean; error?: string; verificationRequired?: boolean; verificationSent?: boolean }> {
   try {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
@@ -58,6 +59,10 @@ export async function registerUser(name: string, email: string, phone: string, p
     if (!res.ok) {
       return { success: false, error: data.error || 'Registration failed' };
     }
+    if (data.verificationRequired) {
+      return { success: true, verificationRequired: true, verificationSent: data.verificationSent };
+    }
+    if (!data.token) return { success: false, error: 'Account created, but sign-in is not ready yet. Please try again.' };
     setCurrentUser(data.user, data.token);
     return { success: true };
   } catch {
@@ -66,7 +71,7 @@ export async function registerUser(name: string, email: string, phone: string, p
 }
 
 // Call the API to login
-export async function loginUser(email: string, password: string): Promise<{ success: boolean; error?: string; banned?: boolean }> {
+export async function loginUser(email: string, password: string): Promise<{ success: boolean; error?: string; banned?: boolean; emailNotVerified?: boolean }> {
   try {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
@@ -77,6 +82,9 @@ export async function loginUser(email: string, password: string): Promise<{ succ
     if (!res.ok) {
       if (data.error === 'banned') {
         return { success: false, banned: true };
+      }
+      if (data.emailNotVerified) {
+        return { success: false, emailNotVerified: true, error: data.error };
       }
       return { success: false, error: data.error || 'Login failed' };
     }

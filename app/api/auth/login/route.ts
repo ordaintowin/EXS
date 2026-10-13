@@ -6,12 +6,13 @@ import { signToken } from '@/app/api/lib/jwt';
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
 
-    if (!email || !password) {
+    if (!normalizedEmail || !password) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
 
     if (!user) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
@@ -19,6 +20,10 @@ export async function POST(request: NextRequest) {
 
     if (user.isBanned) {
       return NextResponse.json({ error: 'banned' }, { status: 403 });
+    }
+
+    if (!user.isVerified) {
+      return NextResponse.json({ error: 'Please verify your email address before signing in.', emailNotVerified: true }, { status: 403 });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.passwordHash);
@@ -35,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, phone: user.phone, isAdmin: user.isAdmin, createdAt: user.createdAt },
+      user: { id: user.id, name: user.name, email: user.email, phone: user.phone, isAdmin: user.isAdmin, isVerified: user.isVerified, createdAt: user.createdAt },
     });
   } catch {
     return NextResponse.json({ error: 'Login failed' }, { status: 500 });

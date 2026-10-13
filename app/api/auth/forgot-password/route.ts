@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import { prisma } from '@/app/api/lib/prisma';
 import { sendEmail } from '@/app/api/lib/email';
 import { passwordResetEmail } from '@/app/api/lib/email-templates';
@@ -7,13 +7,14 @@ import { passwordResetEmail } from '@/app/api/lib/email-templates';
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json();
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
 
-    if (!email) {
+    if (!normalizedEmail) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
     // Always return success to prevent email enumeration
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
 
     if (user) {
       // Delete any existing unused tokens for this user
@@ -24,8 +25,9 @@ export async function POST(request: NextRequest) {
       const token = randomBytes(32).toString('hex');
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
+      const tokenHash = createHash('sha256').update(token).digest('hex');
       await prisma.passwordReset.create({
-        data: { userId: user.id, token, expiresAt },
+        data: { userId: user.id, token: tokenHash, expiresAt },
       });
 
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://exspend.com';

@@ -10,6 +10,7 @@ type AdminUser = {
   phone: string;
   createdAt: string;
   isBanned: boolean;
+  isVerified: boolean;
   kycStatus: 'not_submitted' | 'pending' | 'approved' | 'rejected';
 };
 
@@ -32,6 +33,7 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [banningId, setBanningId] = useState<string | null>(null);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const PAGE_SIZE = 10;
 
   useEffect(() => {
@@ -80,6 +82,29 @@ export default function AdminUsersPage() {
     }
   }
 
+  async function handleVerify(user: AdminUser) {
+    if (!confirm(`Mark ${user.name} as email verified for testing?`)) return;
+    const token = getToken();
+    if (!token) return;
+    setVerifyingId(user.id);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/verify`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isVerified: true } : u));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Failed to verify user.');
+      }
+    } catch {
+      alert('Failed to verify user. Please try again.');
+    } finally {
+      setVerifyingId(null);
+    }
+  }
+
   return (
     <div className="p-4 sm:p-6">
       <h1 className="text-2xl font-bold text-gray-800 mb-2">Users Management</h1>
@@ -107,6 +132,7 @@ export default function AdminUsersPage() {
                 <th className="px-4 py-3 text-left">Phone</th>
                 <th className="px-4 py-3 text-left">Joined</th>
                 <th className="px-4 py-3 text-left">KYC</th>
+                <th className="px-4 py-3 text-left">Email</th>
                 <th className="px-4 py-3 text-left">Status</th>
                 <th className="px-4 py-3 text-left">Action</th>
               </tr>
@@ -114,7 +140,7 @@ export default function AdminUsersPage() {
             <tbody className="divide-y divide-gray-100">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400">No users found</td>
+                  <td colSpan={8} className="px-4 py-8 text-center text-gray-400">No users found</td>
                 </tr>
               ) : (
                 paged.map(user => (
@@ -129,6 +155,19 @@ export default function AdminUsersPage() {
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${KYC_BADGE[user.kycStatus]}`}>
                         {KYC_LABEL[user.kycStatus]}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {user.isVerified ? (
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Verified</span>
+                      ) : (
+                        <button
+                          onClick={() => handleVerify(user)}
+                          disabled={verifyingId === user.id}
+                          className="text-xs font-semibold px-3 py-1 rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors disabled:opacity-50"
+                        >
+                          {verifyingId === user.id ? '…' : 'Verify'}
+                        </button>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {user.isBanned ? (

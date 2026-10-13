@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTokenFromRequest, verifyToken } from '@/app/api/lib/jwt';
 import { prisma } from '@/app/api/lib/prisma';
+import { getAuthenticatedAdmin } from '@/app/api/lib/auth';
 
 export async function GET(request: NextRequest) {
-  const token = getTokenFromRequest(request);
-  const payload = token ? verifyToken(token) : null;
-  if (!payload) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const admin = await prisma.user.findUnique({
-    where: { id: payload.userId },
-    select: { isAdmin: true, isBanned: true },
-  });
-  if (!admin?.isAdmin || admin.isBanned) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  const admin = await getAuthenticatedAdmin(request);
+  if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   try {
     const deposits = await prisma.chainDeposit.findMany({

@@ -44,24 +44,6 @@ export default function AdminReferralsPage() {
 
   useEffect(loadRewards, []);
 
-  async function handleApprove(rewardId: string) {
-    const token = getToken();
-    if (!token) return;
-    setActionMsg(null);
-    const res = await fetch('/api/admin/referral/approve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ rewardId }),
-    });
-    if (res.ok) {
-      setActionMsg('Reward approved successfully!');
-      loadRewards();
-    } else {
-      const d = await res.json();
-      setActionMsg(d.error || 'Failed to approve');
-    }
-  }
-
   async function handleSendBonus(rewardId: string) {
     const token = getToken();
     if (!token) return;

@@ -1,7 +1,9 @@
 export const CRYPTO_OPTIONS = [
+  { label: 'USDT (ERC-20)', value: 'USDT_ERC20' },
   { label: 'USDT (TRC-20)', value: 'USDT_TRC20' },
   { label: 'USDT (BEP-20)', value: 'USDT_BEP20' },
   { label: 'USDT (Polygon)', value: 'USDT_POLYGON' },
+  { label: 'USDC (ERC-20)', value: 'USDC_ERC20' },
   { label: 'USDC (BEP-20)', value: 'USDC_BEP20' },
   { label: 'USDC (Polygon)', value: 'USDC_POLYGON' },
   { label: 'BTC (Bitcoin)', value: 'BTC' },
@@ -16,8 +18,10 @@ export const BUY_CRYPTO_OPTIONS = [
   { label: 'BTC (Bitcoin)', value: 'BTC' },
   { label: 'BNB (BEP-20)', value: 'BNB' },
   { label: 'ETH (ERC-20)', value: 'ETH' },
+  { label: 'USDT (ERC-20)', value: 'USDT_ERC20' },
   { label: 'USDT (TRC-20)', value: 'USDT_TRC20' },
   { label: 'USDT (BEP-20)', value: 'USDT_BEP20' },
+  { label: 'USDC (ERC-20)', value: 'USDC_ERC20' },
   { label: 'USDC (BEP-20)', value: 'USDC_BEP20' },
 ];
 
@@ -26,24 +30,29 @@ export const SELL_CRYPTO_OPTIONS = [
   { label: 'BTC (Bitcoin)', value: 'BTC' },
   { label: 'BNB (BEP-20)', value: 'BNB' },
   { label: 'ETH (ERC-20)', value: 'ETH' },
+  { label: 'USDT (ERC-20)', value: 'USDT_ERC20' },
   { label: 'USDT (TRC-20)', value: 'USDT_TRC20' },
   { label: 'USDT (BEP-20)', value: 'USDT_BEP20' },
+  { label: 'USDC (ERC-20)', value: 'USDC_ERC20' },
   { label: 'USDC (BEP-20)', value: 'USDC_BEP20' },
   { label: 'Binance Pay', value: 'BINANCE_PAY' },
   { label: 'Bybit Pay', value: 'BYBIT_PAY' },
 ];
 
 export const DEFAULT_WALLET_ADDRESSES: Record<string, string> = {
-  USDT_TRC20: 'TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-  USDT_BEP20: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-  USDT_POLYGON: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-  USDC_BEP20: '0xcccccccccccccccccccccccccccccccccccccccc',
-  USDC_POLYGON: '0xdddddddddddddddddddddddddddddddddddddddd',
-  BTC: 'bc1qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-  BNB: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-  ETH: '0xffffffffffffffffffffffffffffffffffffffff',
-  BINANCE_PAY: 'binancepay@exspend.com',
-  BYBIT_PAY: 'bybitpay@exspend.com',
+  // Empty values are intentional: payment destinations must come from admin settings.
+  USDT_ERC20: '',
+  USDC_ERC20: '',
+  USDT_TRC20: '',
+  USDT_BEP20: '',
+  USDT_POLYGON: '',
+  USDC_BEP20: '',
+  USDC_POLYGON: '',
+  BTC: '',
+  BNB: '',
+  ETH: '',
+  BINANCE_PAY: '',
+  BYBIT_PAY: '',
 };
 
 // Legacy constants kept for backward compatibility; use live rates when available

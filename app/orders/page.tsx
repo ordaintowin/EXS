@@ -92,8 +92,11 @@ export default function OrdersPage() {
 
   useEffect(() => {
     const t = getToken();
+    // Auth is stored in browser storage and is read after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setToken(t);
     if (!t) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       return;
     }

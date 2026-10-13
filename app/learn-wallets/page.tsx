@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Check, CircleAlert, KeyRound, ShieldCheck, Smartphone, WalletCards } from 'lucide-react';
+import { ArrowRight, Check, CircleAlert, KeyRound, ShieldCheck, WalletCards } from 'lucide-react';
 import WalletIllustration from '@/app/components/WalletIllustration';
 
 const steps = [

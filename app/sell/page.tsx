@@ -3,30 +3,20 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getToken } from '@/app/lib/auth';
 import { getLiveCryptoPriceText } from '@/app/lib/crypto';
 import BanModal from '@/app/components/BanModal';
 import WalletFundingSelector from '@/app/components/WalletFundingSelector';
 
-const ASSETS = ['BTC', 'BNB', 'ETH', 'USDT (TRC-20)', 'USDT (BEP-20)', 'USDC (BEP-20)', 'USDT (Polygon)', 'USDC (Polygon)', 'Binance Pay', 'Bybit Pay'];
-
-type LinkedWallet = { id: string; chain: string; address: string };
-
-function walletChainForAsset(asset: string): string | null {
-  if (asset === 'BTC') return 'bitcoin';
-  if (asset.includes('TRC-20')) return 'tron';
-  if (asset.includes('BEP-20') || asset === 'BNB') return 'bsc';
-  if (asset.includes('Polygon')) return 'polygon';
-  if (asset === 'ETH') return 'ethereum';
-  return null;
-}
+const ASSETS = ['BTC', 'BNB', 'ETH', 'USDT (ERC-20)', 'USDT (TRC-20)', 'USDT (BEP-20)', 'USDC (ERC-20)', 'USDC (BEP-20)', 'USDT (Polygon)', 'USDC (Polygon)', 'Binance Pay', 'Bybit Pay'];
 
 function assetToSettingsKey(asset: string): string {
   const map: Record<string, string> = {
     BTC: 'BTC',
     BNB: 'BNB',
     ETH: 'ETH',
+    'USDT (ERC-20)': 'USDT_ERC20',
     'USDT (TRC-20)': 'USDT_TRC20',
+    'USDC (ERC-20)': 'USDC_ERC20',
     'USDT (BEP-20)': 'USDT_BEP20',
     'USDC (BEP-20)': 'USDC_BEP20',
     'USDT (Polygon)': 'USDT_POLYGON',
@@ -82,7 +72,6 @@ export default function SellPage() {
   const [bnbUsd, setBnbUsd] = useState(0);
   const [ethUsd, setEthUsd] = useState(0);
   const [walletAddresses, setWalletAddresses] = useState<Record<string, string>>({});
-  const [linkedWallets, setLinkedWallets] = useState<LinkedWallet[]>([]);
   const [sendingWalletAddress, setSendingWalletAddress] = useState('');
 
   // Step 1
@@ -102,19 +91,6 @@ export default function SellPage() {
 
   // Step 4 – success
   const [orderId, setOrderId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const token = getToken();
-    if (!token) return;
-
-    fetch('/api/wallets/linked', { headers: { Authorization: `Bearer ${token}` } })
-      .then(async (response) => {
-        if (!response.ok) return;
-        const data = await response.json();
-        setLinkedWallets(data.wallets ?? []);
-      })
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     async function loadRates() {
@@ -383,6 +359,7 @@ export default function SellPage() {
               cryptoAmount={finalCryptoAmount}
               value={sendingWalletAddress}
               onChange={setSendingWalletAddress}
+              allowExternal
             />
 
             <button

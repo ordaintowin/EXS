@@ -3,6 +3,7 @@ import { getTokenFromRequest, verifyToken } from '@/app/api/lib/jwt';
 import { prisma } from '@/app/api/lib/prisma';
 import { sendEmail } from '@/app/api/lib/email';
 import { orderStatusUpdateEmail } from '@/app/api/lib/email-templates';
+import { getAuthenticatedAdmin } from '@/app/api/lib/auth';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const token = getTokenFromRequest(request);
@@ -26,9 +27,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const token = getTokenFromRequest(request);
-  const user = token ? verifyToken(token) : null;
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const user = await getAuthenticatedAdmin(request);
+  if (!user) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   try {
     const { status } = await request.json();

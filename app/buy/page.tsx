@@ -5,16 +5,18 @@ import { useRouter } from 'next/navigation';
 import BanModal from '@/app/components/BanModal';
 import { getLiveCryptoPriceText } from '@/app/lib/crypto';
 
-const ASSETS = ['BTC', 'BNB', 'ETH', 'USDT (TRC-20)', 'USDT (BEP-20)', 'USDC (BEP-20)', 'USDT (Polygon)', 'USDC (Polygon)'];
+const ASSETS = ['BTC', 'BNB', 'ETH', 'USDT (ERC-20)', 'USDT (TRC-20)', 'USDT (BEP-20)', 'USDC (ERC-20)', 'USDC (BEP-20)', 'USDT (Polygon)', 'USDC (Polygon)'];
 
-type LinkedWallet = { id: string; chain: string; address: string };
+type LinkedWallet = { id: string; chain: string; asset: string; provider?: string; address: string };
 
 function assetToSettingsKey(asset: string): string {
   const map: Record<string, string> = {
     BTC: 'BTC',
     BNB: 'BNB',
     ETH: 'ETH',
+    'USDT (ERC-20)': 'USDT_ERC20',
     'USDT (TRC-20)': 'USDT_TRC20',
+    'USDC (ERC-20)': 'USDC_ERC20',
     'USDT (BEP-20)': 'USDT_BEP20',
     'USDC (BEP-20)': 'USDC_BEP20',
     'USDT (Polygon)': 'USDT_POLYGON',
@@ -26,9 +28,16 @@ function assetToSettingsKey(asset: string): string {
 function walletChainForAsset(asset: string): string {
   if (asset === 'BTC') return 'bitcoin';
   if (asset.includes('TRC-20')) return 'tron';
+  if (asset.includes('ERC-20')) return 'ethereum';
   if (asset.includes('BEP-20') || asset === 'BNB') return 'bsc';
   if (asset.includes('Polygon')) return 'polygon';
   return 'ethereum';
+}
+
+function walletAssetForAsset(asset: string): string {
+  if (asset.startsWith('USDT')) return 'USDT';
+  if (asset.startsWith('USDC')) return 'USDC';
+  return asset;
 }
 
 function isEVMAsset(asset: string) {
@@ -209,7 +218,7 @@ export default function BuyPage() {
   const cryptoRateGhs = ghsPerUsd;
   const cryptoRateUsd = asset === 'BTC' ? btcUsd : asset === 'BNB' ? bnbUsd : asset === 'ETH' ? ethUsd : 1;
   const matchingLinkedWallets = linkedWallets.filter(
-    (wallet) => wallet.chain === walletChainForAsset(asset),
+    (wallet) => wallet.chain === walletChainForAsset(asset) && wallet.asset === walletAssetForAsset(asset),
   );
 
   const bankSetting = paymentSettings['bank_details'] as AdminPaymentSetting | undefined;
@@ -579,7 +588,7 @@ export default function BuyPage() {
             <label className="block text-green-900 font-semibold mb-1 text-sm">Select Crypto</label>
             <select
               value={asset}
-              onChange={(e) => { setAsset(e.target.value); setAmountGhs(''); }}
+               onChange={(e) => { setAsset(e.target.value); setAmountGhs(''); setWalletAddress(''); setSelectedLinkedWalletId(''); }}
               className="w-full border border-green-300 rounded-lg px-3 py-2 text-green-900 bg-white mb-4 focus:outline-none focus:ring-2 focus:ring-green-500"
               disabled={loadingRates}
             >
@@ -644,7 +653,7 @@ export default function BuyPage() {
                 >
                   <option value="">Enter another address</option>
                   {matchingLinkedWallets.map((wallet) => (
-                    <option key={wallet.id} value={wallet.id}>{wallet.chain}: {wallet.address}</option>
+                    <option key={wallet.id} value={wallet.id}>{wallet.provider ?? 'wallet'} · {wallet.address}</option>
                   ))}
                 </select>
               </div>

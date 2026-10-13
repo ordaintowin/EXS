@@ -66,8 +66,14 @@ export async function POST(request: NextRequest) {
       if (consumed.count !== 1) throw new Error('CHALLENGE_ALREADY_USED');
 
       return tx.linkedWallet.create({
-        data: { userId: user.userId, chain: challenge.chain, address: challenge.address },
-        select: { id: true, chain: true, address: true, verifiedAt: true },
+        data: {
+          userId: user.userId,
+          chain: challenge.chain,
+          asset: challenge.asset,
+          provider: challenge.provider,
+          address: challenge.address,
+        },
+        select: { id: true, chain: true, asset: true, provider: true, address: true, verifiedAt: true },
       });
     });
 
@@ -77,6 +83,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'This verification request was already used. Try again.' }, { status: 409 });
     }
     if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
+      const target = 'meta' in error && typeof error.meta === 'object' && error.meta !== null && 'target' in error.meta
+        ? String(error.meta.target)
+        : '';
+      if (target.includes('userId') && target.includes('chain') && target.includes('asset')) {
+        return NextResponse.json({ error: 'You already have this asset linked on this network. Unlink it before adding another.' }, { status: 409 });
+      }
       return NextResponse.json({ error: 'This wallet address is already linked to an account.' }, { status: 409 });
     }
     console.error('WALLET VERIFY ERROR:', error);

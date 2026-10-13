@@ -97,7 +97,7 @@ export default function ProfilePage() {
         setSummary({
           total: orders.length,
           totalSpent: orders.filter((o: { status: string }) => o.status === 'successful').reduce((s: number, o: { amountGhs: number }) => s + (o.amountGhs ?? 0), 0),
-          pending: orders.filter((o: { status: string }) => o.status === 'pending').length,
+          pending: orders.filter((o: { status: string }) => ['waiting', 'pending', 'processing'].includes(o.status)).length,
         });
       })
       .catch(() => {});

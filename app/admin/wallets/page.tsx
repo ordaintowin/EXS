@@ -23,9 +23,11 @@ function authHeaders() {
 }
 
 const WALLET_FIELDS = [
+  { key: 'USDT_ERC20', label: 'USDT (ERC-20)' },
   { key: 'USDT_TRC20', label: 'USDT (TRC-20)' },
   { key: 'USDT_BEP20', label: 'USDT (BEP-20)' },
   { key: 'USDT_POLYGON', label: 'USDT (Polygon)' },
+  { key: 'USDC_ERC20', label: 'USDC (ERC-20)' },
   { key: 'USDC_BEP20', label: 'USDC (BEP-20)' },
   { key: 'USDC_POLYGON', label: 'USDC (Polygon)' },
   { key: 'BTC', label: 'Bitcoin (BTC)' },
